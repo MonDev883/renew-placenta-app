@@ -3,30 +3,27 @@ import { useAuth } from './AuthContext.jsx'
 import { Link } from 'react-router-dom'
 import { LayoutDashboard, Globe } from 'lucide-react'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 const EMPTY_FORM = { name: "", cat: "Soap", price: "", size: "", blurb: "", best: false, scope: "local", images: [], shopeeUrl: "", lazadaUrl: ""};
 const MAX_PHOTOS = 12;
 
 function AdminProducts(){
-  const { token } = useAuth(); // Retrieves the admin authentication token for secure API requests
-  const [products, setProducts] = useState([]); // Stores the complete list of products fetched from the database
-  const [form, setForm] = useState(EMPTY_FORM); // Stores input data for creating or editing a product
-  const [editingId, setEditingId] = useState(null); // Tracks the ID of the product currently being edited (null = creating a new one)
-  const [uploading, setUploading] = useState(false); // Tracks whether product photos are currently uploading
-  const [dragActive, setDragActive] = useState(false); // Tracks drag-and-drop state for the image upload dropzone
-  const [searchTerm, setSearchTerm] = useState(''); // Stores the search input text for filtering products by name
-  const formRef = useRef(null); // Reference used to smooth scroll back up to the form when editing
+  const { token } = useAuth(); 
+  const [products, setProducts] = useState([]); 
+  const [form, setForm] = useState(EMPTY_FORM); 
+  const [editingId, setEditingId] = useState(null); 
+  const [uploading, setUploading] = useState(false); 
+  const [dragActive, setDragActive] = useState(false); 
+  const [searchTerm, setSearchTerm] = useState(''); 
+  const formRef = useRef(null); 
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Function to fetch all products from the backend server
   function loadProducts(){
     fetch(`${API}/api/products`).then(r => r.json()).then(setProducts);
   }
 
-  // Automatically load the product list when the component first opens (mounts)
   useEffect(() => { loadProducts(); }, []);
 
-  // Handles uploading one or multiple product images to the backend server
   async function handleImageUpload(e){
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -54,18 +51,15 @@ function AdminProducts(){
       }
     }
 
-    // Append newly uploaded image URLs to the existing list of images in the form
     setForm(f => ({ ...f, images: [...f.images, ...uploadedUrls] }));
     setUploading(false);
     e.target.value = "";
   }
 
-  // Removes a specific image from the form's image list by its array index
   function removeImage(index){
     setForm(f => ({ ...f, images: f.images.filter((_, i) => i !== index) }));
   }
 
-  // Reorders images left or right within the form preview list
   function moveImage(index, direction){
     setForm(f => {
       const newImages = [...f.images];
@@ -76,7 +70,6 @@ function AdminProducts(){
     });
   }
 
-  // Drag-and-drop helper event handlers
   function handleDragOver(e){
     e.preventDefault();
     setDragActive(true);
@@ -95,7 +88,6 @@ function AdminProducts(){
     }
   }
 
-  // Handles submitting the form to either Create (POST) or Update (PUT) a product
   async function handleSubmit(e){
     e.preventDefault();
     const payload = { ...form, imageUrl: form.images[0] || "" };
@@ -108,13 +100,11 @@ function AdminProducts(){
       body: JSON.stringify(payload),
     });
 
-    // Trigger success notification banner
     setSuccessMsg(editingId ? "Product successfully updated!" : "Product successfully added!");
     setTimeout(() => {
       setSuccessMsg("");
     }, 3000);
 
-    // Smooth scroll back up to the top of the form so the success banner is visible on laptops
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
     setForm(EMPTY_FORM);
@@ -122,17 +112,15 @@ function AdminProducts(){
     loadProducts();
   }
 
-  // Populates the form fields with an existing product's data when "Edit" is clicked
   function startEdit(p){
     setEditingId(p._id);
     setForm({ name: p.name, cat: p.cat, price: p.price, size: p.size, blurb: p.blurb, best: p.best, scope: p.scope, images: p.images?.length ? p.images : (p.imageUrl ? [p.imageUrl] : []), 
-      shopeeUrl: p.shopeeUrl || "", //New added code 10-08-2026
-      lazadaUrl: p.lazadaUrl || "", //New added code 10-08-2026
+      shopeeUrl: p.shopeeUrl || "",
+      lazadaUrl: p.lazadaUrl || "",
     });
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  // Deletes a product by its ID after user confirmation
   async function handleDelete(id){
     if (!confirm("Delete this product?")) return;
     await fetch(`${API}/api/admin/products/${id}`, {
@@ -142,7 +130,6 @@ function AdminProducts(){
     loadProducts();
   }
 
-  // Moves a product's display position up or down in the list
   async function moveProduct(id, direction){
     await fetch(`${API}/api/admin/products/${id}/move`, {
       method: "PUT",
@@ -152,7 +139,6 @@ function AdminProducts(){
     loadProducts();
   }
 
-  // Filters the product list dynamically based on the search input query (case-insensitive)
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -161,7 +147,6 @@ function AdminProducts(){
     <div className="min-h-screen bg-brand-cream px-6 py-10">
       <div className="max-w-5xl mx-auto">
         
-        {/* Header Section & Navigation Links */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="font-display font-semibold text-2xl">Manage Products</h1>
           <div className="flex gap-3">
@@ -191,10 +176,8 @@ function AdminProducts(){
           </div>
         </div>
 
-        {/* Product Input Form (Handles both Creating and Updating) */}
         <form ref={formRef} onSubmit={handleSubmit} className="bg-brand-paper border border-brand-green rounded p-6 mb-10 grid md:grid-cols-2 gap-4">
           
-          {/* Success Notification Pop-up Banner */}
           {successMsg && (
             <div className="mb-2 p-3 bg-brand-green text-brand-cream rounded-sm text-sm font-semibold text-center shadow-md transition-all md:col-span-2">
               {successMsg}
@@ -218,8 +201,6 @@ function AdminProducts(){
           </label>
           <textarea placeholder="Description" value={form.blurb} onChange={e => setForm({...form, blurb: e.target.value})} className="border border-brand-green rounded px-3 py-2 text-sm md:col-span-2" rows={2}/>
 
-          {/*New added feature 10-08-2026*/}
-          {/* Shopee & Lazada Link Inputs */}
           <input 
                 placeholder="Shopee Product Link (https://shopee.ph/...)" 
                 value={form.shopeeUrl} 
@@ -233,7 +214,6 @@ function AdminProducts(){
                 className="border border-brand-green rounded px-3 py-2 text-sm md:col-span-2"
               />
 
-          {/* Drag & Drop Photo Upload Section */}
           <div className="md:col-span-2">
             <label className="block text-sm font-semibold mb-1">
               Product photos ({form.images.length})
@@ -252,9 +232,9 @@ function AdminProducts(){
               <span className="text-xs opacity-60">You can select multiple files at once</span>
               <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden"/>
             </label>
+
             {uploading && <p className="text-xs opacity-70 mt-1">Uploading...</p>}
 
-            {/* Preview Thumbnails for Uploaded Photos */}
             {form.images.length > 0 && (
               <div className="flex gap-3 mt-3 flex-wrap">
                 {form.images.map((url, i) => (
@@ -294,7 +274,6 @@ function AdminProducts(){
             )}
           </div>
 
-          {/* Form Action Buttons (Submit / Cancel) */}
           <div className="md:col-span-2 flex gap-3">
             <button type="submit" className="bg-brand-green hover:opacity-90 text-brand-cream font-semibold px-5 py-2 rounded transition-opacity">
               {editingId ? "Update Product" : "Add Product"}
@@ -307,7 +286,6 @@ function AdminProducts(){
           </div>
         </form>
 
-        {/* Search Input Box (Allows your boss's niece to filter products by name) */}
         <div className="mb-4">
           <input
             type="text"
@@ -318,22 +296,19 @@ function AdminProducts(){
           />
         </div>
 
-        {/* Filtered Product List Display */}
         <div className="space-y-3">
           {filteredProducts.length > 0 ? (
             filteredProducts.map((p, i) => (
               <div key={p._id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-brand-paper border border-brand-green rounded p-4">
                 
-                {/* Product Image & Info */}
                 <div className="flex items-center gap-4">
-                  {p.imageUrl && <img src={p.imageUrl} alt={p.name} className="w-14 h-14 object-contain flex-shrink-0"/>}
+                  {p.imageUrl && <img src={p.imageUrl.startsWith('http') ? p.imageUrl : `${API}${p.imageUrl}`} alt={p.name} className="w-14 h-14 object-contain flex-shrink-0"/>}
                   <div>
                     <p className="font-semibold text-sm sm:text-base">{p.name}</p>
                     <p className="text-xs text-brand-red">{p.size} · {p.price} · {p.scope} · {p.images?.length || 0} photo(s)</p>
                   </div>
                 </div>
 
-                {/* Action Buttons (Stacked on mobile, inline on desktop) */}
                 <div className="flex items-center justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-brand-green/20">
                   <button onClick={() => moveProduct(p._id, 'up')} disabled={i === 0} className="text-sm border border-brand-green rounded px-2.5 py-1 disabled:opacity-30">↑</button>
                   <button onClick={() => moveProduct(p._id, 'down')} disabled={i === filteredProducts.length - 1} className="text-sm border border-brand-green rounded px-2.5 py-1 disabled:opacity-30">↓</button>
