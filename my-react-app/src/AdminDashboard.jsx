@@ -160,7 +160,7 @@ function AdminDashboard(){
 
       {/* Developer Support Footer */}
       <footer className="mt-12 text-center text-xs opacity-60 animate-dash-4">
-        For technical support or updates, contact: <a href="https://mail.google.com/mail/?view=cm&fs=1&to=mondev068@gmail.com" target="_blank" rel="noopener noreferrer" className="underline text-brand-green">mondev068@gmail.com</a>
+        For technical support or updates, contact: <a href="https://mail.google.com/mail/?view=cm&fs=1&to=raymondmancera037@gmail.com" target="_blank" rel="noopener noreferrer" className="underline text-brand-green">raymondmancera037@gmail.com</a>
       </footer>
     </div>
   );
