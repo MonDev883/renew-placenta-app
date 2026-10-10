@@ -97,20 +97,25 @@ function AdminUsers(){
           </div>
           {error && <p className="text-brand-red text-sm">{error}</p>}
           {success && <p className="text-brand-green text-sm">{success}</p>}
-          <button type="submit" className="flex items-center gap-2 bg-brand-green hover:bg-brand-green-deep text-brand-cream font-semibold px-5 py-2 rounded-sm">
+          <button type="submit" className="flex items-center gap-2 bg-brand-green hover:bg-brand-green-deep text-brand-cream font-semibold px-5 py-2 rounded-sm transition-colors">
             <UserPlus size={18}/>
             Create Admin
           </button>
         </form>
 
+        {/* Admin List with Responsive Text Wrapping & Shrink Protection */}
         <div className="space-y-2">
           {admins.map(a => (
-            <div key={a._id} className="flex justify-between items-center bg-brand-paper border border-brand-green rounded p-3 text-sm">
-              <div>
-                <p className="font-semibold">{a.username}</p>
-                <p className="opacity-70">{a.email}</p>
+            <div key={a._id} className="flex justify-between items-start sm:items-center gap-3 bg-brand-paper border border-brand-green rounded p-3 text-sm">
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold truncate">{a.username}</p>
+                <p className="opacity-70 text-xs sm:text-sm break-all">{a.email}</p>
               </div>
-              <button onClick={() => handleDelete(a._id)} className="text-brand-red hover:text-brand-red-dark">
+              <button 
+                onClick={() => handleDelete(a._id)} 
+                className="text-brand-red hover:text-brand-red-dark shrink-0 p-1"
+                title="Delete Admin"
+              >
                 <Trash2 size={18}/>
               </button>
             </div>
@@ -121,4 +126,4 @@ function AdminUsers(){
   );
 }
 
-export default AdminUsers
+export default AdminUsers;

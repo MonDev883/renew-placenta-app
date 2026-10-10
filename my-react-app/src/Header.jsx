@@ -23,12 +23,15 @@ function Header(){
   return (
     <header className={`sticky top-0 z-20 bg-brand-cream text-brand-ink transition-shadow relative ${scrolled ? "shadow-lg shadow-black/10" : ""}`}>
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 px-4 py-1.5 relative z-10">
-        <div className="flex items-center gap-4">
-          <img src={renewLogo} alt="Renew Placenta Herbal Beauty Products" className="h-14 sm:h-20 md:h-28 w-auto"/> 
-          <img src={renewTagline} alt="Refreshed & Renewed" className="h-10 sm:h-16 md:h-20 w-auto"/>
+        
+        {/* Logo and Tagline */}
+        <div className="flex items-center gap-3">
+          <img src={renewLogo} alt="Renew Placenta Herbal Beauty Products" className="h-12 sm:h-16 md:h-24 w-auto"/> 
+          <img src={renewTagline} alt="Refreshed & Renewed" className="h-8 sm:h-12 md:h-16 w-auto"/>
         </div>
 
-        <nav className="hidden md:flex gap-8 text-sm font-semibold tracking-wide uppercase">
+        {/* Desktop & Tablet Navigation */}
+        <nav className="hidden md:flex gap-6 text-sm font-semibold tracking-wide uppercase">
           {LINKS.map(l => (
             <a
               key={l.href}
@@ -40,6 +43,7 @@ function Header(){
           ))}
         </nav>
 
+        {/* Mobile / Tablet Hamburger Button */}
         <button
           className="md:hidden p-2 -mr-2"
           onClick={() => setMenuOpen(o => !o)}
@@ -51,6 +55,7 @@ function Header(){
 
       <div className="h-1 bg-brand-red"></div>
 
+      {/* Mobile / Tablet Dropdown Menu */}
       {menuOpen && (
         <nav className="md:hidden flex flex-col gap-1 px-6 pb-4 text-sm relative z-10">
           {LINKS.map(l => (

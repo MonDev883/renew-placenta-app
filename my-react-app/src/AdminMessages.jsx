@@ -39,6 +39,8 @@ function AdminMessages(){
   return (
     <div className="min-h-screen bg-brand-cream px-6 py-10">
       <div className="max-w-3xl mx-auto">
+        
+        {/* Header & Navigation */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="font-display font-semibold text-2xl">Contact Messages</h1>
           <Link
@@ -50,6 +52,7 @@ function AdminMessages(){
           </Link>
         </div>
 
+        {/* Empty State Banner */}
         {messages.length === 0 && (
           <div className="bg-brand-paper border border-brand-green/30 rounded-lg p-10 text-center text-brand-green/70">
             <Mail className="mx-auto mb-3 opacity-50" size={28} />
@@ -58,16 +61,22 @@ function AdminMessages(){
           </div>
         )}
 
+        {/* Message List */}
         <div className="space-y-3">
           {messages.map(m => (
             <div key={m._id} className={`border rounded p-4 ${m.read ? "bg-brand-paper border-brand-line" : "bg-white border-brand-green"}`}>
               <div className="flex justify-between items-start gap-3">
                 <div>
-                  <p className="font-semibold">{m.name} <span className="font-normal opacity-60 text-sm">— {m.email}</span></p>
+                  <p className="font-semibold">
+                    {m.name} 
+                    {/* Responsive email drop for small mobile screens */}
+                    <span className="font-normal opacity-60 text-sm block sm:inline"> — {m.email}</span>
+                  </p>
                   <p className="text-xs opacity-60">{new Date(m.createdAt).toLocaleString()}</p>
                 </div>
+
+                {/* Action Buttons Toolbar */}
                 <div className="flex items-center gap-2 shrink-0">
-                  {/* Direct Gmail Web Compose Link */}
                   <a
                     href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(m.email)}&su=${encodeURIComponent("Re: Inquiry regarding Renew Placenta")}`}
                     target="_blank"
@@ -91,10 +100,11 @@ function AdminMessages(){
                   </button>
                 </div>
               </div>
-              <p className="mt-2 text-sm">{m.message}</p>
+              <p className="mt-2 text-sm text-brand-ink">{m.message}</p>
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );

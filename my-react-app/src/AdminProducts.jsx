@@ -323,20 +323,25 @@ function AdminProducts(){
         <div className="space-y-3">
           {filteredProducts.length > 0 ? (
             filteredProducts.map((p, i) => (
-              <div key={p._id} className="flex items-center justify-between bg-brand-paper border border-brand-green rounded p-4">
+              <div key={p._id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-brand-paper border border-brand-green rounded p-4">
+                
+                {/* Product Image & Info */}
                 <div className="flex items-center gap-4">
-                  {p.imageUrl && <img src={p.imageUrl} alt={p.name} className="w-14 h-14 object-contain"/>}
+                  {p.imageUrl && <img src={p.imageUrl} alt={p.name} className="w-14 h-14 object-contain flex-shrink-0"/>}
                   <div>
-                    <p className="font-semibold">{p.name}</p>
+                    <p className="font-semibold text-sm sm:text-base">{p.name}</p>
                     <p className="text-xs text-brand-red">{p.size} · {p.price} · {p.scope} · {p.images?.length || 0} photo(s)</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => moveProduct(p._id, 'up')} disabled={i === 0} className="text-sm border border-brand-green rounded px-2 py-1 disabled:opacity-30">↑</button>
-                  <button onClick={() => moveProduct(p._id, 'down')} disabled={i === filteredProducts.length - 1} className="text-sm border border-brand-green rounded px-2 py-1 disabled:opacity-30">↓</button>
-                  <button onClick={() => startEdit(p)} className="text-sm underline">Edit</button>
-                  <button onClick={() => handleDelete(p._id)} className="text-sm text-brand-red underline">Delete</button>
+
+                {/* Action Buttons (Stacked on mobile, inline on desktop) */}
+                <div className="flex items-center justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-brand-green/20">
+                  <button onClick={() => moveProduct(p._id, 'up')} disabled={i === 0} className="text-sm border border-brand-green rounded px-2.5 py-1 disabled:opacity-30">↑</button>
+                  <button onClick={() => moveProduct(p._id, 'down')} disabled={i === filteredProducts.length - 1} className="text-sm border border-brand-green rounded px-2.5 py-1 disabled:opacity-30">↓</button>
+                  <button onClick={() => startEdit(p)} className="text-sm font-medium underline px-2 py-1">Edit</button>
+                  <button onClick={() => handleDelete(p._id)} className="text-sm font-medium text-brand-red underline px-2 py-1">Delete</button>
                 </div>
+
               </div>
             ))
           ) : (
