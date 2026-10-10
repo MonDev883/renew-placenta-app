@@ -32,7 +32,7 @@ export function AuthProvider({ children }){
   function logout(){
     localStorage.removeItem('adminToken');
     setToken(null);
-    window.location.href =  '/login'// Automatically redirect to login page
+    window.location.href =  '/admin/login';// Automatically redirect to login page
   }
 
   return (
