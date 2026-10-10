@@ -3,7 +3,7 @@ import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from 'react-icons/fa'
 
 import { useState } from 'react'
 
-const API = 'http://localhost:4000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 function Contact(){
   const [form, setForm] = useState({ name: "", email: "", message: "" });

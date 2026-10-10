@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import ProductCard from './ProductCard.jsx'
 import ProductGalleryModal from './ProductGalleryModal.jsx'
 
-const API = 'http://localhost:4000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 const PREVIEW_COUNT = 6;
 
 function Products(){

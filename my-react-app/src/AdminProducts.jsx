@@ -3,8 +3,7 @@ import { useAuth } from './AuthContext.jsx'
 import { Link } from 'react-router-dom'
 import { LayoutDashboard, Globe } from 'lucide-react'
 
-
-const API = 'http://localhost:4000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 const EMPTY_FORM = { name: "", cat: "Soap", price: "", size: "", blurb: "", best: false, scope: "local", images: [], shopeeUrl: "", lazadaUrl: ""};
 const MAX_PHOTOS = 12;
 

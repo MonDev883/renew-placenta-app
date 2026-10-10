@@ -4,7 +4,7 @@ import { Package, LogOut, Globe, TrendingUp, Mail, Users, Key } from 'lucide-rea
 import { useAuth } from './AuthContext.jsx'
 import renewLogo from './assets/renew-logo-v2.png'
 
-const API = 'http://localhost:4000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 function AdminDashboard(){
   const { token, logout } = useAuth();

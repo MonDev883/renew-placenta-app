@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Key, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from './AuthContext.jsx'
 
-const API = 'http://localhost:4000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 function AdminChangePassword() {
   const { token, logout } = useAuth();
