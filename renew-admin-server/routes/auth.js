@@ -30,11 +30,18 @@ router.post('/login', async (req, res) => {
   admin.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
   await admin.save();
 
-  try {
+ try {
     await sendOtpEmail(admin.email, code);
   } catch (err) {
-    return res.status(500).json({ error: 'Could not send verification email' });
+    console.error('Nodemailer failed to send email:', err);
+    // Fallback: prints the OTP code to your Render logs so you can still log in!
+    console.log(`========================================`);
+    console.log(`[EMERGENCY LOGIN OTP for ${admin.username}]: ${code}`);
+    console.log(`========================================`);
   }
+
+  const maskedEmail = admin.email ? admin.email.replace(/^(.{2}).+(@.+)$/, '$1***$2') : 'no-email';
+  res.json({ otpRequired: true, username: admin.username, maskedEmail });
 
   const maskedEmail = admin.email.replace(/^(.{2}).+(@.+)$/, '$1***$2');
   res.json({ otpRequired: true, username: admin.username, maskedEmail });
