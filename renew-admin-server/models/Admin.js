@@ -6,6 +6,9 @@ const adminSchema = new mongoose.Schema({
   email: { type: String, required: true },
   otpCode: { type: String },
   otpExpires: { type: Date },
+  resetCodeHash: String,
+  resetExpires: Date,
+  resetAttempts: { type: Number, default: 0 },
 });
 
 module.exports = mongoose.model('Admin', adminSchema);

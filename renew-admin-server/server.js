@@ -13,6 +13,7 @@ const messageRoutes = require('./routes/messages');
 const requireAuth = require('./middleware/requireAuth');
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json());
 const path = require('path');

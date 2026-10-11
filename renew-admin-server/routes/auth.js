@@ -3,7 +3,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const requireAuth = require('../middleware/requireAuth');
-const { sendOtpEmail } = require('../utils/mailer');
+const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
+const { sendOtpEmail, sendResetEmail } = require('../utils/mailer');
 
 const router = express.Router();
 
@@ -112,6 +114,78 @@ router.get('/admins', requireAuth, async (req, res) => {
 // Admin only: delete an admin account
 router.delete('/admins/:id', requireAuth, async (req, res) => {
   await Admin.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
+});
+
+const resetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Too many attempts. Please try again later.' },
+});
+
+const hashCode = (code) => crypto.createHash('sha256').update(String(code)).digest('hex');
+
+// Step 1: request a reset code
+router.post('/forgot-password', resetLimiter, async (req, res) => {
+  const { username } = req.body;
+  const reply = { message: 'If that account exists, a reset code has been sent to its email.' };
+
+  if (!username) return res.status(400).json({ error: 'Username is required' });
+
+  const admin = await Admin.findOne({ username });
+  if (!admin || !admin.email) return res.json(reply);
+
+  const code = crypto.randomInt(100000, 1000000).toString();
+  admin.resetCodeHash = hashCode(code);
+  admin.resetExpires = new Date(Date.now() + 10 * 60 * 1000);
+  admin.resetAttempts = 0;
+  await admin.save();
+
+  try {
+    await sendResetEmail(admin.email, code);
+  } catch (err) {
+    console.error('Reset email failed:', err.message);
+  }
+
+  res.json(reply);
+});
+
+// Step 2: verify the code and set a new password
+router.post('/reset-password', resetLimiter, async (req, res) => {
+  const { username, code, newPassword } = req.body;
+  const invalid = () => res.status(400).json({ error: 'Invalid or expired code' });
+
+  if (!username || !code || !newPassword) {
+    return res.status(400).json({ error: 'Username, code, and new password are required' });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  }
+
+  const admin = await Admin.findOne({ username });
+  if (!admin || !admin.resetCodeHash || !admin.resetExpires) return invalid();
+
+  if (admin.resetExpires < new Date() || admin.resetAttempts >= 5) {
+    admin.resetCodeHash = undefined;
+    admin.resetExpires = undefined;
+    await admin.save();
+    return invalid();
+  }
+
+  if (hashCode(code) !== admin.resetCodeHash) {
+    admin.resetAttempts += 1;
+    await admin.save();
+    return invalid();
+  }
+
+  admin.passwordHash = await bcrypt.hash(newPassword, 10);
+  admin.resetCodeHash = undefined;
+  admin.resetExpires = undefined;
+  admin.resetAttempts = 0;
+  admin.otpCode = undefined;
+  admin.otpExpires = undefined;
+  await admin.save();
+
   res.json({ success: true });
 });
 
