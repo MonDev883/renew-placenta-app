@@ -1,21 +1,29 @@
 import { Droplet, Sparkles } from 'lucide-react'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 function ProductCard({ product, onView }){
   const Icon = product.cat === "Soap" ? Droplet : Sparkles;
+  
+  // Safely resolve image URL whether it's an absolute URL or a relative /uploads path
+  const imageUrl = product.imageUrl 
+    ? (product.imageUrl.startsWith('http') ? product.imageUrl : `${API}${product.imageUrl}`)
+    : "";
+
   return (
     <div className="group relative bg-brand-paper border border-brand-green rounded overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/10">
       <span className="absolute top-14 right-4 z-10 bg-brand-red text-white text-xs font-semibold px-2.5 py-1 rounded">
         {product.best ? "Best seller" : product.cat}
-      </span>
+      </span> 
       <button
         onClick={() => onView(product)}
         className="absolute top-3 right-4 z-10 bg-white/90 hover:bg-white text-brand-ink text-xs font-semibold px-2.5 py-1 rounded shadow-sm"
       >
         View
       </button>
-      {product.imageUrl && (
+      {imageUrl && (
         <img
-          src={product.imageUrl}
+          src={imageUrl}
           alt={product.name}
           className="w-full h-44 object-contain bg-brand-paper p-2 pt-6"
           onError={(e) => { e.currentTarget.style.display = "none"; }}
