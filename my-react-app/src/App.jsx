@@ -14,7 +14,9 @@ import AdminProducts from './AdminProducts.jsx'
 import AdminMessages from './AdminMessages.jsx'
 import AdminUsers from './AdminUsers.jsx'
 import AdminChangePassword from './AdminChangePassword.jsx'
+import AdminForgotPassword from './AdminForgotPassword.jsx'
 import ProtectedRoute from './ProtectedRoute.jsx'
+import { Eye, EyeOff } from 'lucide-react'
 
 function PublicSite(){
   return (
@@ -37,6 +39,7 @@ function App(){
     <Routes>
       <Route path="/" element={<PublicSite/>} />
       <Route path="/admin/login" element={<Login/>} />
+      <Route path="/admin/forgot-password" element={<AdminForgotPassword/>} />
       <Route path="/admin" element={
         <ProtectedRoute>
           <AdminDashboard/>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link} from 'react-router-dom'
 import { User, Lock, AlertTriangle, ShieldCheck, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from './AuthContext.jsx'
 import renewLogo from './assets/renew-logo-v2.png'
@@ -109,10 +109,13 @@ function Login(){
 
             <button
               type="submit"
-              className="w-full bg-brand-green hover:bg-brand-green-deep text-brand-cream font-semibold py-2.5 rounded-sm"
+              className="w-full bg-brand-green hover:opacity-90 transition-opacity text-brand-cream font-semibold py-2.5 rounded-sm"
             >
               Continue
             </button>
+             <Link to="/admin/forgot-password" className="block text-center text-sm mt-4 text-brand-green hover:underline">
+              Forgot password?
+           </Link>
           </form>
         )}
 
