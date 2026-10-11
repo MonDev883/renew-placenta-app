@@ -30,7 +30,8 @@ function AdminChangePassword() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API}/api/admin/change-password`, {
+     // const res = await fetch(`${API}/api/admin/change-password`, {
+     const res = await fetch(`${API}/api/auth/change-password`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -39,10 +40,10 @@ function AdminChangePassword() {
         body: JSON.stringify({ currentPassword, newPassword })
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to update password.");
+        throw new Error(data.error || `Request failed (${res.status}). Please try again.`);
       }
 
       setSuccess("Password updated successfully! Redirecting...");
