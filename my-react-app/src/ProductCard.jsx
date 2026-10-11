@@ -2,13 +2,16 @@ import { Droplet, Sparkles } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
+// Helper to clean up localhost URLs stored in MongoDB and point them to Render
+function getImageUrl(url) {
+  if (!url) return "";
+  const relative = url.replace(/^https?:\/\/localhost(:\d+)?/, '');
+  return relative.startsWith('http') ? relative : `${API}${relative}`;
+}
+
 function ProductCard({ product, onView }){
   const Icon = product.cat === "Soap" ? Droplet : Sparkles;
-  
-  // Safely resolve image URL whether it's an absolute URL or a relative /uploads path
-  const imageUrl = product.imageUrl 
-    ? (product.imageUrl.startsWith('http') ? product.imageUrl : `${API}${product.imageUrl}`)
-    : "";
+  const imageUrl = getImageUrl(product.imageUrl);
 
   return (
     <div className="group relative bg-brand-paper border border-brand-green rounded overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/10">

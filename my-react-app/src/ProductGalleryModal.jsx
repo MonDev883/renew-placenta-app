@@ -3,6 +3,12 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
+function getImageUrl(url) {
+  if (!url) return "";
+  const relative = url.replace(/^https?:\/\/localhost(:\d+)?/, '');
+  return relative.startsWith('http') ? relative : `${API}${relative}`;
+}
+
 function ProductGalleryModal({ product, onClose }){
   const [index, setIndex] = useState(0);
 
@@ -11,7 +17,7 @@ function ProductGalleryModal({ product, onClose }){
     function onKey(e){
       if (!product) return;
       const rawPhotos = product.images?.length ? product.images : (product.image ? [product.image] : []);
-      const photos = rawPhotos.map(img => img.startsWith('http') ? img : `${API}${img}`);
+      const photos = rawPhotos.map(getImageUrl);
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight") setIndex(i => (i + 1) % photos.length);
       if (e.key === "ArrowLeft") setIndex(i => (i - 1 + photos.length) % photos.length);
@@ -23,7 +29,7 @@ function ProductGalleryModal({ product, onClose }){
   if (!product) return null;
 
   const rawPhotos = product.images?.length ? product.images : (product.image ? [product.image] : []);
-  const photos = rawPhotos.map(img => img.startsWith('http') ? img : `${API}${img}`);
+  const photos = rawPhotos.map(getImageUrl);
 
   return (
     <div
@@ -45,7 +51,7 @@ function ProductGalleryModal({ product, onClose }){
           {photos.length > 0 && (
             <img
               src={photos[index]}
-              alt={`${product.name} photo${index + 1}`}
+              alt={`${product.name} photo ${index + 1}`}
               className="w-full h-full object-contain"
             />
           )}

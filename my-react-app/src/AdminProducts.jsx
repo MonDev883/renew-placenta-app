@@ -7,6 +7,13 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 const EMPTY_FORM = { name: "", cat: "Soap", price: "", size: "", blurb: "", best: false, scope: "local", images: [], shopeeUrl: "", lazadaUrl: ""};
 const MAX_PHOTOS = 12;
 
+// Helper to clean up old localhost URLs stored in MongoDB and point them to Render
+function getImageUrl(url) {
+  if (!url) return "";
+  const relative = url.replace(/^https?:\/\/localhost(:\d+)?/, '');
+  return relative.startsWith('http') ? relative : `${API}${relative}`;
+}
+
 function AdminProducts(){
   const { token } = useAuth(); 
   const [products, setProducts] = useState([]); 
@@ -239,7 +246,7 @@ function AdminProducts(){
               <div className="flex gap-3 mt-3 flex-wrap">
                 {form.images.map((url, i) => (
                   <div key={i} className="relative">
-                    <img src={url} alt={`Photo ${i + 1}`} className="h-20 w-20 object-contain border border-brand-green rounded bg-white"/>
+                    <img src={getImageUrl(url)} alt={`Photo ${i + 1}`} className="h-20 w-20 object-contain border border-brand-green rounded bg-white"/>
                     <button
                       type="button"
                       onClick={() => removeImage(i)}
@@ -302,7 +309,7 @@ function AdminProducts(){
               <div key={p._id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-brand-paper border border-brand-green rounded p-4">
                 
                 <div className="flex items-center gap-4">
-                  {p.imageUrl && <img src={p.imageUrl.startsWith('http') ? p.imageUrl : `${API}${p.imageUrl}`} alt={p.name} className="w-14 h-14 object-contain flex-shrink-0"/>}
+                  {p.imageUrl && <img src={getImageUrl(p.imageUrl)} alt={p.name} className="w-14 h-14 object-contain flex-shrink-0"/>}
                   <div>
                     <p className="font-semibold text-sm sm:text-base">{p.name}</p>
                     <p className="text-xs text-brand-red">{p.size} · {p.price} · {p.scope} · {p.images?.length || 0} photo(s)</p>
