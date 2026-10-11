@@ -113,9 +113,17 @@ function Login(){
             >
               Continue
             </button>
-             <Link to="/admin/forgot-password" className="block text-center text-sm mt-4 text-brand-green hover:underline">
-              Forgot password?
-           </Link>
+             <div className="text-center mt-4">
+              <Link
+                to="/admin/forgot-password"
+                className="group relative inline-block text-sm text-brand-green font-medium"
+              >
+                <span className="relative">
+                  Forgot password?
+                  <span className="absolute left-0 -bottom-0.5 h-[2px] w-full bg-brand-red origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out" />
+                </span>
+              </Link>
+            </div>
           </form>
         )}
 
