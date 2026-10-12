@@ -31,8 +31,8 @@ function AdminForgotPassword() {
     e.preventDefault();
     setError(""); setInfo(""); setLoading(true);
     try {
-      const data = await post("forgot-password", { username });
-      setInfo(data.message);
+      await post("forgot-password", { username });
+      setInfo("If that username belongs to an admin account, a 6-digit code was sent to its email. Check your inbox and spam folder. The code expires in 10 minutes.");
       setStep(2);
     } catch (err) {
       setError(err.message);
@@ -143,6 +143,26 @@ function AdminForgotPassword() {
                 <Key size={18} />
                 {loading ? "Updating..." : "Reset password"}
               </button>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep(1);
+                    setCode("");
+                    setNewPassword("");
+                    setConfirmPassword("");
+                    setError("");
+                    setInfo("");
+                  }}
+                  className="group inline-flex items-center gap-1.5 text-sm text-brand-green font-medium"
+                >
+                  <LogIn size={16} />
+                  <span className="relative">
+                    Wrong username or no email? Go back
+                    <span className="absolute left-0 -bottom-0.5 h-[2px] w-full bg-brand-red origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out" />
+                  </span>
+                </button>
+                </div>
             </form>
           )}
         </div>
