@@ -1,4 +1,22 @@
-async function sendEmail({ to, subject, text, html }) {
+const escapeHtml = (s = '') =>
+  String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+async function sendEmail({ to, subject, text, html, replyTo }) {
+  const recipients = (Array.isArray(to) ? to : [to]).map((email) => ({ email }));
+
+  const payload = {
+    sender: { name: 'Renew Admin', email: process.env.GMAIL_USER },
+    to: recipients,
+    subject,
+    textContent: text,
+    htmlContent: html,
+  };
+  if (replyTo) payload.replyTo = { email: replyTo };
+
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: {
@@ -6,13 +24,7 @@ async function sendEmail({ to, subject, text, html }) {
       'content-type': 'application/json',
       accept: 'application/json',
     },
-    body: JSON.stringify({
-      sender: { name: 'Renew Admin', email: process.env.GMAIL_USER },
-      to: [{ email: to }],
-      subject,
-      textContent: text,
-      htmlContent: html,
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
@@ -40,4 +52,28 @@ async function sendResetEmail(to, code) {
   console.log('Reset code email sent to:', to);
 }
 
-module.exports = { sendOtpEmail, sendResetEmail };
+async function sendNewMessageAlert(msg) {
+  const recipients = (process.env.NOTIFY_EMAIL || '')
+    .split(',')
+    .map((e) => e.trim())
+    .filter(Boolean);
+
+  if (recipients.length === 0) {
+    console.log('NOTIFY_EMAIL is empty, alert skipped');
+    return;
+  }
+
+  const name = msg.name || 'Someone';
+  const replyTo = /^\S+@\S+\.\S+$/.test(msg.email || '') ? msg.email : undefined;
+
+  await sendEmail({
+    to: recipients,
+    replyTo,
+    subject: `New website message from ${name}`,
+    text: `From: ${name}\nEmail: ${msg.email || 'not provided'}\n\n${msg.message || ''}\n\nOpen the admin panel to view and reply.`,
+    html: `<p><b>From:</b> ${escapeHtml(name)}<br><b>Email:</b> ${escapeHtml(msg.email || 'not provided')}</p><p>${escapeHtml(msg.message || '').replace(/\n/g, '<br>')}</p><p><a href="https://renew-placenta.netlify.app/admin/messages">Open the admin panel to view and reply</a></p>`,
+  });
+  console.log('New message alert sent');
+}
+
+module.exports = { sendOtpEmail, sendResetEmail, sendNewMessageAlert };
