@@ -4,12 +4,15 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const Admin = require('../models/Admin');
+const ActivityLog = require('../models/ActivityLog');
 const requireAuth = require('../middleware/requireAuth');
+const requireRole = require('../middleware/requireRole');
+const { logActivity } = require('../utils/activity');
 const { sendOtpEmail, sendResetEmail } = require('../utils/mailer');
 
 const router = express.Router();
+const ROLES = ['owner', 'editor', 'support'];
 
-// ---------- Rate limiters (defined once, before the routes that use them) ----------
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -35,6 +38,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
   const matches = await bcrypt.compare(password, admin.passwordHash);
   if (!matches) {
+    await logActivity(req, { actor: admin, action: 'login.failed', details: 'Wrong password' });
     return res.status(401).json({ error: 'Invalid username or password' });
   }
 
@@ -83,10 +87,17 @@ router.post('/verify-otp', loginLimiter, async (req, res) => {
     expiresIn: '8h',
   });
 
-  res.json({ token, username: admin.username });
+  await logActivity(req, { actor: admin, action: 'login', details: 'Logged in' });
+  res.json({ token, username: admin.username, role: admin.role });
 });
 
-// Admin only: change own password
+// Any logged-in admin: who am I (used by the frontend to show or hide features)
+router.get('/me', requireAuth, requireRole(), async (req, res) => {
+  const { username, email, role } = req.adminUser;
+  res.json({ username, email, role });
+});
+
+// Any logged-in admin: change own password
 router.put('/change-password', requireAuth, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword) {
@@ -104,17 +115,22 @@ router.put('/change-password', requireAuth, async (req, res) => {
 
   admin.passwordHash = await bcrypt.hash(newPassword, 10);
   await admin.save();
+
+  await logActivity(req, { actor: admin, action: 'password.change', target: admin.username });
   res.json({ success: true });
 });
 
-// Admin only: create a new co-admin account
-router.post('/admins', requireAuth, async (req, res) => {
-  const { username, password, email } = req.body;
+// Owner only: create a new admin account
+router.post('/admins', requireAuth, requireRole('owner'), async (req, res) => {
+  const { username, password, email, role = 'support' } = req.body;
   if (!username || !password || !email) {
     return res.status(400).json({ error: 'Username, password, and email are required' });
   }
   if (password.length < 8) {
     return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  }
+  if (!ROLES.includes(role)) {
+    return res.status(400).json({ error: 'Invalid role' });
   }
 
   const existing = await Admin.findOne({ username });
@@ -123,29 +139,65 @@ router.post('/admins', requireAuth, async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const admin = await Admin.create({ username, passwordHash, email });
-  res.status(201).json({ username: admin.username, email: admin.email });
+  const admin = await Admin.create({ username, passwordHash, email, role });
+
+  await logActivity(req, { action: 'admin.create', target: admin.username, details: `role: ${role}` });
+  res.status(201).json({ username: admin.username, email: admin.email, role: admin.role });
 });
 
-// Admin only: list all admin accounts (no passwords returned)
-router.get('/admins', requireAuth, async (req, res) => {
-  const admins = await Admin.find().select('username email');
+// Owner only: list all admin accounts (no passwords returned)
+router.get('/admins', requireAuth, requireRole('owner'), async (req, res) => {
+  const admins = await Admin.find().select('username email role');
   res.json(admins);
 });
 
-// Admin only: delete an admin account (cannot delete yourself or the last admin)
-router.delete('/admins/:id', requireAuth, async (req, res) => {
+// Owner only: change another admin's role
+router.put('/admins/:id/role', requireAuth, requireRole('owner'), async (req, res) => {
+  const { role } = req.body;
+  if (!ROLES.includes(role)) {
+    return res.status(400).json({ error: 'Invalid role' });
+  }
+  if (req.params.id === String(req.admin.id)) {
+    return res.status(400).json({ error: 'You cannot change your own role' });
+  }
+
+  const target = await Admin.findById(req.params.id);
+  if (!target) return res.status(404).json({ error: 'Account not found' });
+
+  const previous = target.role;
+  target.role = role;
+  await target.save();
+
+  await logActivity(req, { action: 'admin.role', target: target.username, details: `${previous} -> ${role}` });
+  res.json({ success: true });
+});
+
+// Owner only: delete an admin account (cannot delete yourself or the last owner)
+router.delete('/admins/:id', requireAuth, requireRole('owner'), async (req, res) => {
   if (req.params.id === String(req.admin.id)) {
     return res.status(400).json({ error: 'You cannot delete your own account' });
   }
 
-  const count = await Admin.countDocuments();
-  if (count <= 1) {
-    return res.status(400).json({ error: 'You cannot delete the last admin account' });
+  const target = await Admin.findById(req.params.id);
+  if (!target) return res.status(404).json({ error: 'Account not found' });
+
+  if (target.role === 'owner') {
+    const owners = await Admin.countDocuments({ role: 'owner' });
+    if (owners <= 1) {
+      return res.status(400).json({ error: 'You cannot delete the last owner account' });
+    }
   }
 
-  await Admin.findByIdAndDelete(req.params.id);
+  await target.deleteOne();
+  await logActivity(req, { action: 'admin.delete', target: target.username, details: target.email });
   res.json({ success: true });
+});
+
+// Owner only: activity log (newest first)
+router.get('/activity', requireAuth, requireRole('owner'), async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit, 10) || 100, 300);
+  const logs = await ActivityLog.find().sort({ createdAt: -1 }).limit(limit);
+  res.json(logs);
 });
 
 // Forgot password, step 1: request a reset code
@@ -209,6 +261,7 @@ router.post('/reset-password', resetLimiter, async (req, res) => {
   admin.otpExpires = undefined;
   await admin.save();
 
+  await logActivity(req, { actor: admin, action: 'password.reset', target: admin.username });
   res.json({ success: true });
 });
 

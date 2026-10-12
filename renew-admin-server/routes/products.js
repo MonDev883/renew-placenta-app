@@ -1,26 +1,14 @@
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const Product = require('../models/Product');
 const requireAuth = require('../middleware/requireAuth');
-upload = require('../middleware/upload');
+const requireRole = require('../middleware/requireRole');
+const { logActivity } = require('../utils/activity');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
-const uploadDir = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
-  },
-});
-
+// Product name for the activity log (works whether the field is "name" or "title")
+const label = (p) => p.name || p.title || String(p._id);
 
 // Public: anyone (your website) can read the product list
 router.get('/products', async (req, res) => {
@@ -28,15 +16,17 @@ router.get('/products', async (req, res) => {
   res.json(products);
 });
 
-// Admin only: create
-router.post('/admin/products', requireAuth, async (req, res) => {
+// Owner or editor: create
+router.post('/admin/products', requireAuth, requireRole('owner', 'editor'), async (req, res) => {
   const count = await Product.countDocuments();
   const product = await Product.create({ ...req.body, order: count });
+
+  await logActivity(req, { action: 'product.create', target: label(product) });
   res.status(201).json(product);
 });
 
-// Admin only: move a product up or down in the list
-router.put('/admin/products/:id/move', requireAuth, async (req, res) => {
+// Owner or editor: move a product up or down in the list
+router.put('/admin/products/:id/move', requireAuth, requireRole('owner', 'editor'), async (req, res) => {
   const { direction } = req.body;
   const products = await Product.find().sort({ order: 1 });
   const index = products.findIndex(p => p._id.toString() === req.params.id);
@@ -55,29 +45,35 @@ router.put('/admin/products/:id/move', requireAuth, async (req, res) => {
   await current.save();
   await target.save();
 
+  await logActivity(req, { action: 'product.reorder', target: label(current), details: `moved ${direction}` });
   res.json({ success: true });
 });
 
-// Admin only: upload an image, get back its URL
-router.post('/admin/upload', requireAuth, upload.single('image'), (req, res) => {
+// Owner or editor: upload an image, get back its permanent Cloudinary URL
+router.post('/admin/upload', requireAuth, requireRole('owner', 'editor'), upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-
- // const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
- // <--- 2. req.file.path holds the permanent Cloudinary secure URL!
   res.json({ url: req.file.path });
 });
 
-// Admin only: update
-router.put('/admin/products/:id', requireAuth, async (req, res) => {
+// Owner or editor: update
+router.put('/admin/products/:id', requireAuth, requireRole('owner', 'editor'), async (req, res) => {
   const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
   if (!product) return res.status(404).json({ error: 'Product not found' });
+
+  await logActivity(req, {
+    action: 'product.update',
+    target: label(product),
+    details: `fields: ${Object.keys(req.body).join(', ')}`,
+  });
   res.json(product);
 });
 
-// Admin only: delete
-router.delete('/admin/products/:id', requireAuth, async (req, res) => {
+// Owner or editor: delete
+router.delete('/admin/products/:id', requireAuth, requireRole('owner', 'editor'), async (req, res) => {
   const product = await Product.findByIdAndDelete(req.params.id);
   if (!product) return res.status(404).json({ error: 'Product not found' });
+
+  await logActivity(req, { action: 'product.delete', target: label(product) });
   res.json({ success: true });
 });
 

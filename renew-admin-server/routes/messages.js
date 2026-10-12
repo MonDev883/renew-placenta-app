@@ -3,6 +3,8 @@ const rateLimit = require('express-rate-limit');
 const Message = require('../models/Message');
 const requireAuth = require('../middleware/requireAuth');
 const { sendNewMessageAlert } = require('../utils/mailer');
+const requireRole = require('../middleware/requireRole');
+const { logActivity } = require('../utils/activity');
 
 const router = express.Router();
 
@@ -36,23 +38,25 @@ router.post('/messages', contactLimiter, async (req, res) => {
   res.status(201).json(saved);
 });
 
-// Admin only: view all messages
-router.get('/admin/messages', requireAuth, async (req, res) => {
+// Any admin role: view all messages
+router.get('/admin/messages', requireAuth, requireRole(), async (req, res) => {
   const messages = await Message.find().sort({ createdAt: -1 });
   res.json(messages);
 });
 
-// Admin only: mark a message as read
-router.put('/admin/messages/:id/read', requireAuth, async (req, res) => {
+// Any admin role: mark a message as read
+router.put('/admin/messages/:id/read', requireAuth, requireRole(), async (req, res) => {
   const message = await Message.findByIdAndUpdate(req.params.id, { read: true }, { new: true });
   if (!message) return res.status(404).json({ error: 'Message not found' });
+  await logActivity(req, { action: 'message.read', target: message.name, details: message.email });
   res.json(message);
 });
 
-// Admin only: delete a message
-router.delete('/admin/messages/:id', requireAuth, async (req, res) => {
+// Owner or editor: delete a message
+router.delete('/admin/messages/:id', requireAuth, requireRole('owner', 'editor'), async (req, res) => {
   const message = await Message.findByIdAndDelete(req.params.id);
   if (!message) return res.status(404).json({ error: 'Message not found' });
+  await logActivity(req, { action: 'message.delete', target: message.name, details: message.email });
   res.json({ success: true });
 });
 

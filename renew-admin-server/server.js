@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const messageRoutes = require('./routes/messages');
 const requireAuth = require('./middleware/requireAuth');
+const Admin = require('./models/Admin');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -49,7 +50,14 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 4000;
 
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
+  .then(async () => {
+    const result = await Admin.updateMany(
+      { role: { $exists: false } },
+      { $set: { role: 'owner' } }
+    );
+    if (result.modifiedCount) {
+      console.log(`Set ${result.modifiedCount} existing admin(s) to owner`);
+    }
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

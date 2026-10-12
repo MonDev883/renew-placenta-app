@@ -17,6 +17,7 @@ import AdminChangePassword from './AdminChangePassword.jsx'
 import AdminForgotPassword from './AdminForgotPassword.jsx'
 import ProtectedRoute from './ProtectedRoute.jsx'
 import { Eye, EyeOff } from 'lucide-react'
+import AdminActivity from './AdminActivity.jsx'
 
 function PublicSite(){
   return (
@@ -63,6 +64,11 @@ function App(){
       <Route path="/admin/change-password" element={
         <ProtectedRoute>
           <AdminChangePassword/>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/activity" element={
+        <ProtectedRoute>
+          <AdminActivity/>
         </ProtectedRoute>
       } />
     </Routes>

@@ -5,6 +5,7 @@ const adminSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   email: { type: String, required: true },
   otpCode: { type: String },
+  role: { type: String, enum: ['owner', 'editor', 'support'], default: 'support' },
   otpExpires: { type: Date },
   resetCodeHash: String,
   resetExpires: Date,

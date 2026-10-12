@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, LogOut, Globe, TrendingUp, Mail, Users, Key } from 'lucide-react'
+import { Package, LogOut, Globe, TrendingUp, Mail, Users, Key, ClipboardList } from 'lucide-react'
 import { useAuth } from './AuthContext.jsx'
+import { useMe } from './useMe.js'
 import renewLogo from './assets/renew-logo-v2.png'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
+const ROLE_LABELS = {
+  owner: "Owner",
+  editor: "Editor",
+  support: "Support",
+};
+
 function AdminDashboard(){
   const { token, logout } = useAuth();
+  const me = useMe();
+  const role = me?.role;
   const [username, setUsername] = useState("");
   const [productCount, setProductCount] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -62,7 +71,9 @@ function AdminDashboard(){
         <div className="flex items-center gap-3 mb-8 animate-dash-1">
           <img src={renewLogo} alt="Renew Placenta Herbal Beauty Products" className="h-14 sm:h-20 md:h-24 w-auto"/>
           <div>
-            <p className="text-xs uppercase tracking-wide text-brand-red font-semibold">Admin Panel</p>
+            <p className="text-xs uppercase tracking-wide text-brand-red font-semibold">
+              Admin Panel{role ? ` · ${ROLE_LABELS[role] || role}` : ""}
+            </p>
             <h1 className="font-display font-semibold text-xl">{username ? `Welcome, ${username}` : "Welcome"}</h1>
           </div>
         </div>
@@ -77,21 +88,40 @@ function AdminDashboard(){
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 animate-dash-3">
-          <Link
-            to="/admin/users"
-            className="group bg-brand-paper border border-brand-green rounded p-5 flex items-center gap-4 hover:bg-brand-green hover:text-brand-cream transition-colors"
-          >
-            <div className="w-11 h-11 rounded-full bg-brand-green group-hover:bg-white flex items-center justify-center shrink-0 transition-colors">
-              <Users className="text-white group-hover:text-brand-green transition-colors" size={20}/>
-            </div>
-            <div>
-              <p className="font-semibold">Admin Accounts</p>
-              <p className="text-sm opacity-70 group-hover:opacity-90">Add or remove admins</p>
-            </div>
-          </Link>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 animate-dash-3">
+          {/* Owner only: Admin Accounts */}
+          {role === 'owner' && (
+            <Link
+              to="/admin/users"
+              className="group bg-brand-paper border border-brand-green rounded p-5 flex items-center gap-4 hover:bg-brand-green hover:text-brand-cream transition-colors"
+            >
+              <div className="w-11 h-11 rounded-full bg-brand-green group-hover:bg-white flex items-center justify-center shrink-0 transition-colors">
+                <Users className="text-white group-hover:text-brand-green transition-colors" size={20}/>
+              </div>
+              <div>
+                <p className="font-semibold">Admin Accounts</p>
+                <p className="text-sm opacity-70 group-hover:opacity-90">Add, remove, set roles</p>
+              </div>
+            </Link>
+          )}
 
-          {/* Messages Card with Live Notification Badge */}
+          {/* Owner only: Activity Log */}
+          {role === 'owner' && (
+            <Link
+              to="/admin/activity"
+              className="group bg-brand-paper border border-brand-green rounded p-5 flex items-center gap-4 hover:bg-brand-green hover:text-brand-cream transition-colors"
+            >
+              <div className="w-11 h-11 rounded-full bg-brand-green group-hover:bg-white flex items-center justify-center shrink-0 transition-colors">
+                <ClipboardList className="text-white group-hover:text-brand-green transition-colors" size={20}/>
+              </div>
+              <div>
+                <p className="font-semibold">Activity Log</p>
+                <p className="text-sm opacity-70 group-hover:opacity-90">Who changed what</p>
+              </div>
+            </Link>
+          )}
+
+          {/* Messages Card with Live Notification Badge (all roles) */}
           <Link
             to="/admin/messages"
             className="group relative bg-brand-paper border border-brand-green rounded p-5 flex items-center gap-4 hover:bg-brand-green hover:text-brand-cream transition-colors"
@@ -110,19 +140,23 @@ function AdminDashboard(){
             </div>
           </Link>
 
-          <Link
-            to="/admin/products"
-            className="group bg-brand-paper border border-brand-green rounded p-5 flex items-center gap-4 hover:bg-brand-green hover:text-brand-cream transition-colors"
-          >
-            <div className="w-11 h-11 rounded-full bg-brand-green group-hover:bg-white flex items-center justify-center shrink-0 transition-colors">
-              <Package className="text-white group-hover:text-brand-green transition-colors" size={20}/>
-            </div>
-            <div>
-              <p className="font-semibold">Manage Products</p>
-              <p className="text-sm opacity-70 group-hover:opacity-90">Add, edit, reorder, delete</p>
-            </div>
-          </Link>
+          {/* Owner and editor: Manage Products */}
+          {(role === 'owner' || role === 'editor') && (
+            <Link
+              to="/admin/products"
+              className="group bg-brand-paper border border-brand-green rounded p-5 flex items-center gap-4 hover:bg-brand-green hover:text-brand-cream transition-colors"
+            >
+              <div className="w-11 h-11 rounded-full bg-brand-green group-hover:bg-white flex items-center justify-center shrink-0 transition-colors">
+                <Package className="text-white group-hover:text-brand-green transition-colors" size={20}/>
+              </div>
+              <div>
+                <p className="font-semibold">Manage Products</p>
+                <p className="text-sm opacity-70 group-hover:opacity-90">Add, edit, reorder, delete</p>
+              </div>
+            </Link>
+          )}
 
+          {/* Everyone: View Public Site */}
           <a
             href="/"
             className="group bg-brand-paper border border-brand-green rounded p-5 flex items-center gap-4 hover:bg-brand-green hover:text-brand-cream transition-colors"
@@ -158,7 +192,7 @@ function AdminDashboard(){
         </div>
       </div>
 
-            {/* Support Footer */}
+      {/* Support Footer */}
       <footer className="mt-12 text-center text-xs opacity-60 animate-dash-4">
         For technical support or updates, contact:{" "}
         <a

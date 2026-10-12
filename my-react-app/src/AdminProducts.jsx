@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from './AuthContext.jsx'
+import { useMe } from './useMe.js'
 import { Link } from 'react-router-dom'
-import { LayoutDashboard, Globe } from 'lucide-react'
+import { LayoutDashboard, Globe, AlertTriangle, CheckCircle2 } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 const EMPTY_FORM = { name: "", cat: "Soap", price: "", size: "", blurb: "", best: false, scope: "local", images: [], shopeeUrl: "", lazadaUrl: ""};
@@ -16,17 +17,30 @@ function getImageUrl(url) {
 
 function AdminProducts(){
   const { token } = useAuth(); 
+  const me = useMe();
   const [products, setProducts] = useState([]); 
   const [form, setForm] = useState(EMPTY_FORM); 
   const [editingId, setEditingId] = useState(null); 
   const [uploading, setUploading] = useState(false); 
+  const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false); 
   const [searchTerm, setSearchTerm] = useState(''); 
   const formRef = useRef(null); 
   const [successMsg, setSuccessMsg] = useState("");
+  const [notice, setNotice] = useState(null); // { type: "success" | "error", text: "..." }
+
+  const searching = searchTerm.trim() !== "";
+
+  function showNotice(type, text){
+    setNotice({ type, text });
+    setTimeout(() => setNotice(null), 6000);
+  }
 
   function loadProducts(){
-    fetch(`${API}/api/products`).then(r => r.json()).then(setProducts);
+    fetch(`${API}/api/products`)
+      .then(r => r.json())
+      .then(data => setProducts(Array.isArray(data) ? data : []))
+      .catch(() => setProducts([]));
   }
 
   useEffect(() => { loadProducts(); }, []);
@@ -37,6 +51,7 @@ function AdminProducts(){
     setUploading(true);
 
     const uploadedUrls = [];
+    const failures = [];
     for (const file of files) {
       const data = new FormData();
       data.append('image', file);
@@ -48,19 +63,23 @@ function AdminProducts(){
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          alert(`Upload failed for ${file.name}: ${err.error || res.statusText}`);
+          failures.push(`${file.name}: ${err.error || res.statusText || res.status}`);
           continue;
         }
         const result = await res.json();
         uploadedUrls.push(result.url);
       } catch (err) {
-        alert(`Upload failed for ${file.name}: ${err.message}`);
+        failures.push(`${file.name}: ${err.message}`);
       }
     }
 
     setForm(f => ({ ...f, images: [...f.images, ...uploadedUrls] }));
     setUploading(false);
     e.target.value = "";
+
+    if (failures.length > 0) {
+      showNotice("error", `Upload failed for ${failures.join("; ")}`);
+    }
   }
 
   function removeImage(index){
@@ -97,26 +116,35 @@ function AdminProducts(){
 
   async function handleSubmit(e){
     e.preventDefault();
+    setSaving(true);
     const payload = { ...form, imageUrl: form.images[0] || "" };
     const url = editingId ? `${API}/api/admin/products/${editingId}` : `${API}/api/admin/products`;
     const method = editingId ? "PUT" : "POST";
     
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`);
 
-    setSuccessMsg(editingId ? "Product successfully updated!" : "Product successfully added!");
-    setTimeout(() => {
-      setSuccessMsg("");
-    }, 3000);
+      setSuccessMsg(editingId ? "Product successfully updated!" : "Product successfully added!");
+      setTimeout(() => {
+        setSuccessMsg("");
+      }, 3000);
 
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    setForm(EMPTY_FORM);
-    setEditingId(null);
-    loadProducts();
+      setForm(EMPTY_FORM);
+      setEditingId(null);
+      loadProducts();
+    } catch (err) {
+      showNotice("error", err.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   function startEdit(p){
@@ -128,27 +156,54 @@ function AdminProducts(){
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  async function handleDelete(id){
-    if (!confirm("Delete this product?")) return;
-    await fetch(`${API}/api/admin/products/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    loadProducts();
+  async function handleDelete(p){
+    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${API}/api/admin/products/${p._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`);
+      showNotice("success", `"${p.name}" was deleted.`);
+    } catch (err) {
+      showNotice("error", err.message);
+    } finally {
+      loadProducts();
+    }
   }
 
   async function moveProduct(id, direction){
-    await fetch(`${API}/api/admin/products/${id}/move`, {
-      method: "PUT",
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ direction }),
-    });
-    loadProducts();
+    try {
+      const res = await fetch(`${API}/api/admin/products/${id}/move`, {
+        method: "PUT",
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ direction }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`);
+    } catch (err) {
+      showNotice("error", err.message);
+    } finally {
+      loadProducts();
+    }
   }
 
   const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (p.name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Support accounts cannot manage products (the server also refuses them)
+  if (me && me.role === 'support') {
+    return (
+      <div className="min-h-screen bg-brand-cream px-6 py-10">
+        <div className="max-w-xl mx-auto">
+          <p className="text-brand-red text-sm mb-4">Your account does not have permission to manage products.</p>
+          <Link to="/admin" className="text-sm text-brand-green underline">Back to dashboard</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-brand-cream px-6 py-10">
@@ -282,8 +337,12 @@ function AdminProducts(){
           </div>
 
           <div className="md:col-span-2 flex gap-3">
-            <button type="submit" className="bg-brand-green hover:opacity-90 text-brand-cream font-semibold px-5 py-2 rounded transition-opacity">
-              {editingId ? "Update Product" : "Add Product"}
+            <button
+              type="submit"
+              disabled={saving || uploading}
+              className="bg-brand-green hover:opacity-90 text-brand-cream font-semibold px-5 py-2 rounded transition-opacity disabled:opacity-50"
+            >
+              {saving ? "Saving..." : editingId ? "Update Product" : "Add Product"}
             </button>
             {editingId && (
               <button type="button" onClick={() => { setForm(EMPTY_FORM); setEditingId(null); }} className="border border-brand-green px-5 py-2 rounded-sm">
@@ -301,6 +360,9 @@ function AdminProducts(){
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full md:w-80 border border-brand-green bg-brand-paper rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-green"
           />
+          {searching && (
+            <p className="text-xs opacity-60 mt-1">Clear the search to reorder products with the arrows.</p>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -317,21 +379,38 @@ function AdminProducts(){
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-brand-green/20">
-                  <button onClick={() => moveProduct(p._id, 'up')} disabled={i === 0} className="text-sm border border-brand-green rounded px-2.5 py-1 disabled:opacity-30">↑</button>
-                  <button onClick={() => moveProduct(p._id, 'down')} disabled={i === filteredProducts.length - 1} className="text-sm border border-brand-green rounded px-2.5 py-1 disabled:opacity-30">↓</button>
+                  <button onClick={() => moveProduct(p._id, 'up')} disabled={searching || i === 0} className="text-sm border border-brand-green rounded px-2.5 py-1 disabled:opacity-30">↑</button>
+                  <button onClick={() => moveProduct(p._id, 'down')} disabled={searching || i === filteredProducts.length - 1} className="text-sm border border-brand-green rounded px-2.5 py-1 disabled:opacity-30">↓</button>
                   <button onClick={() => startEdit(p)} className="text-sm font-medium underline px-2 py-1">Edit</button>
-                  <button onClick={() => handleDelete(p._id)} className="text-sm font-medium text-brand-red underline px-2 py-1">Delete</button>
+                  <button onClick={() => handleDelete(p)} className="text-sm font-medium text-brand-red underline px-2 py-1">Delete</button>
                 </div>
 
               </div>
             ))
           ) : (
             <p className="text-sm opacity-70 bg-brand-paper border border-brand-green rounded p-4 text-center">
-              No products found matching "{searchTerm}"
+              {searching ? `No products found matching "${searchTerm}"` : "No products yet."}
             </p>
           )}
         </div>
       </div>
+
+      {/* Floating notice (always visible at the top of the screen) */}
+      {notice && (
+        <div
+          role="alert"
+          className={`fixed top-5 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md flex items-start gap-2 p-3 rounded border shadow-lg text-sm bg-brand-paper ${
+            notice.type === "success"
+              ? "border-brand-green text-brand-green"
+              : "border-brand-red text-brand-red"
+          }`}
+        >
+          {notice.type === "success"
+            ? <CheckCircle2 size={16} className="mt-0.5 shrink-0"/>
+            : <AlertTriangle size={16} className="mt-0.5 shrink-0"/>}
+          <span>{notice.text}</span>
+        </div>
+      )}
     </div>
   );
 }

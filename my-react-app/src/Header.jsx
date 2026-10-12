@@ -22,12 +22,12 @@ function Header(){
 
   return (
     <header className={`sticky top-0 z-20 bg-brand-cream text-brand-ink transition-shadow relative ${scrolled ? "shadow-lg shadow-black/10" : ""}`}>
-      <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 px-4 py-1.5 relative z-10">
+      <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 px-6 py-1.5 relative z-10">
         
         {/* Logo and Tagline */}
         <div className="flex items-center gap-3">
-          <img src={renewLogo} alt="Renew Placenta Herbal Beauty Products" className="h-12 sm:h-16 md:h-24 w-auto"/> 
-          <img src={renewTagline} alt="Refreshed & Renewed" className="h-8 sm:h-12 md:h-16 w-auto"/>
+          <img src={renewLogo} alt="Renew Placenta Herbal Beauty Products" className="h-12 sm:h-16 md:h-20 lg:h-24 w-auto"/>
+<img src={renewTagline} alt="Refreshed & Renewed" className="h-8 sm:h-12 md:h-14 lg:h-16 w-auto"/>
         </div>
 
         {/* Desktop & Tablet Navigation */}

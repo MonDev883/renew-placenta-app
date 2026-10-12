@@ -2,13 +2,21 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { LayoutDashboard, UserPlus, Trash2, Eye, EyeOff, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { useAuth } from './AuthContext.jsx'
+import { useMe } from './useMe.js'
+
+const ROLE_OPTIONS = [
+  { value: "support", label: "Support: messages only" },
+  { value: "editor", label: "Editor: products and messages" },
+  { value: "owner", label: "Owner: full access" },
+];
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 function AdminUsers(){
   const { token } = useAuth();
+  const me = useMe();
   const [admins, setAdmins] = useState([]);
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [form, setForm] = useState({ username: "", email: "", password: "", role: "support" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -41,14 +49,31 @@ function AdminUsers(){
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(form),
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setError(data.error);
+      setError(data.error || `Request failed (${res.status}).`);
       return;
     }
-    setSuccess(`Admin "${data.username}" created.`);
-    setForm({ username: "", email: "", password: "" });
+    setSuccess(`Admin "${data.username}" created as ${data.role}.`);
+    setForm({ username: "", email: "", password: "", role: "support" });
     loadAdmins();
+  }
+
+  async function changeRole(admin, role){
+    try {
+      const res = await fetch(`${API}/api/auth/admins/${admin._id}/role`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ role }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`);
+      showNotice("success", `${admin.username} is now ${role}.`);
+    } catch (err) {
+      showNotice("error", err.message);
+    } finally {
+      loadAdmins();
+    }
   }
 
   async function confirmDelete(){
@@ -71,6 +96,17 @@ function AdminUsers(){
       setDeleting(false);
       setPendingDelete(null);
     }
+  }
+
+  if (me && me.role !== 'owner') {
+    return (
+      <div className="min-h-screen bg-brand-cream px-6 py-10">
+        <div className="max-w-xl mx-auto">
+          <p className="text-brand-red text-sm mb-4">Only owners can manage admin accounts.</p>
+          <Link to="/admin" className="text-sm text-brand-green underline">Back to dashboard</Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -104,7 +140,7 @@ function AdminUsers(){
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="Password"
+              placeholder="Password (at least 8 characters)"
               value={form.password}
               onChange={e => setForm({ ...form, password: e.target.value })}
               className="w-full border border-brand-green rounded px-3 py-2 pr-10 text-sm"
@@ -119,6 +155,13 @@ function AdminUsers(){
               {showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
             </button>
           </div>
+          <select
+            value={form.role}
+            onChange={e => setForm({ ...form, role: e.target.value })}
+            className="w-full border border-brand-green rounded px-3 py-2 text-sm bg-white"
+          >
+            {ROLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
           {error && <p className="text-brand-red text-sm">{error}</p>}
           {success && <p className="text-brand-green text-sm">{success}</p>}
           <button type="submit" className="flex items-center gap-2 bg-brand-green hover:opacity-90 text-brand-cream font-semibold px-5 py-2 rounded-sm transition-opacity">
@@ -127,7 +170,7 @@ function AdminUsers(){
           </button>
         </form>
 
-        {/* Delete result notice (disappears after 5 seconds) */}
+        {/* Result notice (disappears after 5 seconds) */}
         {notice && (
           <div
             className={`mb-4 flex items-start gap-2 p-3 rounded border text-sm ${
@@ -143,21 +186,36 @@ function AdminUsers(){
 
         {/* Admin List with Responsive Text Wrapping & Shrink Protection */}
         <div className="space-y-2">
-          {admins.map(a => (
-            <div key={a._id} className="flex justify-between items-start sm:items-center gap-3 bg-brand-paper border border-brand-green rounded p-3 text-sm">
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold truncate">{a.username}</p>
-                <p className="opacity-70 text-xs sm:text-sm break-all">{a.email}</p>
+          {admins.map(a => {
+            const isMe = me?.username === a.username;
+            return (
+              <div key={a._id} className="flex justify-between items-start sm:items-center gap-3 bg-brand-paper border border-brand-green rounded p-3 text-sm">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold truncate">
+                    {a.username}
+                    {isMe && <span className="font-normal opacity-60 text-xs"> (you)</span>}
+                  </p>
+                  <p className="opacity-70 text-xs sm:text-sm break-all">{a.email}</p>
+                  <select
+                    value={a.role || "support"}
+                    onChange={e => changeRole(a, e.target.value)}
+                    disabled={isMe}
+                    title={isMe ? "You cannot change your own role" : "Change role"}
+                    className="mt-1 border border-brand-green/40 rounded px-2 py-1 text-xs bg-white disabled:opacity-60"
+                  >
+                    {ROLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <button 
+                  onClick={() => setPendingDelete(a)} 
+                  className="text-brand-red hover:text-brand-red-dark shrink-0 p-1"
+                  title="Delete Admin"
+                >
+                  <Trash2 size={18}/>
+                </button>
               </div>
-              <button 
-                onClick={() => setPendingDelete(a)} 
-                className="text-brand-red hover:text-brand-red-dark shrink-0 p-1"
-                title="Delete Admin"
-              >
-                <Trash2 size={18}/>
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

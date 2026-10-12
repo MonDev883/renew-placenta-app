@@ -1,39 +1,65 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { LayoutDashboard, Mail, MailOpen, Trash2, Send } from 'lucide-react'
+import { LayoutDashboard, Mail, MailOpen, Trash2, Send, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { useAuth } from './AuthContext.jsx'
+import { useMe } from './useMe.js'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 function AdminMessages(){
   const { token } = useAuth();
+  const me = useMe();
+  const canDelete = me?.role === 'owner' || me?.role === 'editor';
+
   const [messages, setMessages] = useState([]);
+  const [notice, setNotice] = useState(null); // { type: "success" | "error", text: "..." }
+
+  function showNotice(type, text){
+    setNotice({ type, text });
+    setTimeout(() => setNotice(null), 5000);
+  }
 
   function loadMessages(){
     fetch(`${API}/api/admin/messages`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
-      .then(setMessages);
+      .then(data => setMessages(Array.isArray(data) ? data : []))
+      .catch(() => setMessages([]));
   }
 
   useEffect(() => { loadMessages(); }, []);
 
   async function markRead(id){
-    await fetch(`${API}/api/admin/messages/${id}/read`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    loadMessages();
+    try {
+      const res = await fetch(`${API}/api/admin/messages/${id}/read`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`);
+    } catch (err) {
+      showNotice("error", err.message);
+    } finally {
+      loadMessages();
+    }
   }
 
   async function handleDelete(id){
     if (!confirm("Delete this message?")) return;
-    await fetch(`${API}/api/admin/messages/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    loadMessages();
+    try {
+      const res = await fetch(`${API}/api/admin/messages/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`);
+      showNotice("success", "Message deleted.");
+    } catch (err) {
+      showNotice("error", err.message);
+    } finally {
+      loadMessages();
+    }
   }
 
   return (
@@ -95,9 +121,12 @@ function AdminMessages(){
                   )}
                   {m.read && <Mail size={18} className="opacity-30 p-1"/>}
                   
-                  <button onClick={() => handleDelete(m._id)} title="Delete" className="text-brand-red hover:text-brand-red-dark p-1">
-                    <Trash2 size={18}/>
-                  </button>
+                  {/* Delete: owners and editors only */}
+                  {canDelete && (
+                    <button onClick={() => handleDelete(m._id)} title="Delete" className="text-brand-red hover:text-brand-red-dark p-1">
+                      <Trash2 size={18}/>
+                    </button>
+                  )}
                 </div>
               </div>
               <p className="mt-2 text-sm text-brand-ink">{m.message}</p>
@@ -106,6 +135,23 @@ function AdminMessages(){
         </div>
 
       </div>
+
+      {/* Floating notice (always visible at the top of the screen) */}
+      {notice && (
+        <div
+          role="alert"
+          className={`fixed top-5 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md flex items-start gap-2 p-3 rounded border shadow-lg text-sm bg-brand-paper ${
+            notice.type === "success"
+              ? "border-brand-green text-brand-green"
+              : "border-brand-red text-brand-red"
+          }`}
+        >
+          {notice.type === "success"
+            ? <CheckCircle2 size={16} className="mt-0.5 shrink-0"/>
+            : <AlertTriangle size={16} className="mt-0.5 shrink-0"/>}
+          <span>{notice.text}</span>
+        </div>
+      )}
     </div>
   );
 }
