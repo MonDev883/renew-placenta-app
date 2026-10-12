@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { LayoutDashboard, UserPlus, Trash2, Eye, EyeOff } from 'lucide-react'
+import { LayoutDashboard, UserPlus, Trash2, Eye, EyeOff, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { useAuth } from './AuthContext.jsx'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
@@ -13,10 +13,21 @@ function AdminUsers(){
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // Delete flow
+  const [pendingDelete, setPendingDelete] = useState(null); // the admin waiting for confirmation
+  const [deleting, setDeleting] = useState(false);
+  const [notice, setNotice] = useState(null); // { type: "success" | "error", text: "..." }
+
+  function showNotice(type, text){
+    setNotice({ type, text });
+    setTimeout(() => setNotice(null), 5000);
+  }
+
   function loadAdmins(){
     fetch(`${API}/api/auth/admins`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
-      .then(setAdmins);
+      .then(data => setAdmins(Array.isArray(data) ? data : []))
+      .catch(() => setAdmins([]));
   }
 
   useEffect(() => { loadAdmins(); }, []);
@@ -40,13 +51,26 @@ function AdminUsers(){
     loadAdmins();
   }
 
-  async function handleDelete(id){
-    if (!confirm("Remove this admin account?")) return;
-    await fetch(`${API}/api/auth/admins/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    loadAdmins();
+  async function confirmDelete(){
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`${API}/api/auth/admins/${pendingDelete._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Request failed (${res.status}).`);
+      }
+      showNotice("success", `Admin "${pendingDelete.username}" was deleted.`);
+      loadAdmins();
+    } catch (err) {
+      showNotice("error", err.message);
+    } finally {
+      setDeleting(false);
+      setPendingDelete(null);
+    }
   }
 
   return (
@@ -97,11 +121,25 @@ function AdminUsers(){
           </div>
           {error && <p className="text-brand-red text-sm">{error}</p>}
           {success && <p className="text-brand-green text-sm">{success}</p>}
-          <button type="submit" className="flex items-center gap-2 bg-brand-green hover:bg-brand-green-deep text-brand-cream font-semibold px-5 py-2 rounded-sm transition-colors">
+          <button type="submit" className="flex items-center gap-2 bg-brand-green hover:opacity-90 text-brand-cream font-semibold px-5 py-2 rounded-sm transition-opacity">
             <UserPlus size={18}/>
             Create Admin
           </button>
         </form>
+
+        {/* Delete result notice (disappears after 5 seconds) */}
+        {notice && (
+          <div
+            className={`mb-4 flex items-start gap-2 p-3 rounded border text-sm ${
+              notice.type === "success"
+                ? "bg-brand-green/10 border-brand-green text-brand-green"
+                : "bg-brand-red/10 border-brand-red text-brand-red"
+            }`}
+          >
+            {notice.type === "success" ? <CheckCircle2 size={16} className="mt-0.5 shrink-0"/> : <AlertTriangle size={16} className="mt-0.5 shrink-0"/>}
+            <span>{notice.text}</span>
+          </div>
+        )}
 
         {/* Admin List with Responsive Text Wrapping & Shrink Protection */}
         <div className="space-y-2">
@@ -112,7 +150,7 @@ function AdminUsers(){
                 <p className="opacity-70 text-xs sm:text-sm break-all">{a.email}</p>
               </div>
               <button 
-                onClick={() => handleDelete(a._id)} 
+                onClick={() => setPendingDelete(a)} 
                 className="text-brand-red hover:text-brand-red-dark shrink-0 p-1"
                 title="Delete Admin"
               >
@@ -122,6 +160,48 @@ function AdminUsers(){
           ))}
         </div>
       </div>
+
+      {/* Confirmation popup */}
+      {pendingDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={() => !deleting && setPendingDelete(null)}
+        >
+          <div
+            className="w-full max-w-sm bg-brand-paper border border-brand-green rounded-lg p-6 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle size={20} className="text-brand-red"/>
+              <h2 className="font-display font-semibold text-lg">Delete admin account?</h2>
+            </div>
+            <p className="text-sm mb-1">
+              You are about to delete <strong>{pendingDelete.username}</strong>
+            </p>
+            <p className="text-xs opacity-70 break-all mb-4">{pendingDelete.email}</p>
+            <p className="text-sm text-brand-red mb-5">This cannot be undone. This person will no longer be able to log in.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setPendingDelete(null)}
+                disabled={deleting}
+                className="px-4 py-2 text-sm border border-brand-green rounded text-brand-green hover:bg-brand-green/10 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm bg-brand-red text-white rounded hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                <Trash2 size={16}/>
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,16 +1,31 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const Admin = require('../models/Admin');
-const requireAuth = require('../middleware/requireAuth');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
+const Admin = require('../models/Admin');
+const requireAuth = require('../middleware/requireAuth');
 const { sendOtpEmail, sendResetEmail } = require('../utils/mailer');
 
 const router = express.Router();
 
+// ---------- Rate limiters (defined once, before the routes that use them) ----------
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Too many attempts. Please try again later.' },
+});
+
+const resetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Too many attempts. Please try again later.' },
+});
+
+const hashCode = (code) => crypto.createHash('sha256').update(String(code)).digest('hex');
+
 // Step 1: verify username + password, then email a code
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body;
 
   const admin = await Admin.findOne({ username });
@@ -27,7 +42,7 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'This account has no email on file. Contact the site owner.' });
   }
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const code = crypto.randomInt(100000, 1000000).toString();
   admin.otpCode = code;
   admin.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
   await admin.save();
@@ -35,6 +50,7 @@ router.post('/login', async (req, res) => {
   try {
     await sendOtpEmail(admin.email, code);
   } catch (err) {
+    console.error('OTP email failed:', err.message);
     return res.status(500).json({ error: 'Could not send verification email' });
   }
 
@@ -43,7 +59,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Step 2: verify the emailed code, issue the real token
-router.post('/verify-otp', async (req, res) => {
+router.post('/verify-otp', loginLimiter, async (req, res) => {
   const { username, code } = req.body;
 
   const admin = await Admin.findOne({ username });
@@ -76,6 +92,9 @@ router.put('/change-password', requireAuth, async (req, res) => {
   if (!currentPassword || !newPassword) {
     return res.status(400).json({ error: 'Current and new password are required' });
   }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters' });
+  }
 
   const admin = await Admin.findById(req.admin.id);
   if (!admin) return res.status(404).json({ error: 'Account not found' });
@@ -94,6 +113,9 @@ router.post('/admins', requireAuth, async (req, res) => {
   if (!username || !password || !email) {
     return res.status(400).json({ error: 'Username, password, and email are required' });
   }
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  }
 
   const existing = await Admin.findOne({ username });
   if (existing) {
@@ -111,21 +133,22 @@ router.get('/admins', requireAuth, async (req, res) => {
   res.json(admins);
 });
 
-// Admin only: delete an admin account
+// Admin only: delete an admin account (cannot delete yourself or the last admin)
 router.delete('/admins/:id', requireAuth, async (req, res) => {
+  if (req.params.id === String(req.admin.id)) {
+    return res.status(400).json({ error: 'You cannot delete your own account' });
+  }
+
+  const count = await Admin.countDocuments();
+  if (count <= 1) {
+    return res.status(400).json({ error: 'You cannot delete the last admin account' });
+  }
+
   await Admin.findByIdAndDelete(req.params.id);
   res.json({ success: true });
 });
 
-const resetLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: 'Too many attempts. Please try again later.' },
-});
-
-const hashCode = (code) => crypto.createHash('sha256').update(String(code)).digest('hex');
-
-// Step 1: request a reset code
+// Forgot password, step 1: request a reset code
 router.post('/forgot-password', resetLimiter, async (req, res) => {
   const { username } = req.body;
   const reply = { message: 'If that account exists, a reset code has been sent to its email.' };
@@ -150,7 +173,7 @@ router.post('/forgot-password', resetLimiter, async (req, res) => {
   res.json(reply);
 });
 
-// Step 2: verify the code and set a new password
+// Forgot password, step 2: verify the code and set a new password
 router.post('/reset-password', resetLimiter, async (req, res) => {
   const { username, code, newPassword } = req.body;
   const invalid = () => res.status(400).json({ error: 'Invalid or expired code' });

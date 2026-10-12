@@ -1,4 +1,3 @@
-
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 dns.setDefaultResultOrder('ipv4first');
@@ -7,6 +6,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const messageRoutes = require('./routes/messages');
@@ -14,23 +14,44 @@ const requireAuth = require('./middleware/requireAuth');
 
 const app = express();
 app.set('trust proxy', 1);
-app.use(cors());
-app.use(express.json());
-const path = require('path');
+
+// Only these websites may call the API from a browser.
+// Extra origins can be added in Render with ALLOWED_ORIGINS (comma-separated).
+const allowedOrigins = [
+  'https://renew-placenta.netlify.app',
+  'http://localhost:5173',
+  ...(process.env.ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean),
+];
+
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+}));
+
+app.use(express.json({ limit: '100kb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', authRoutes);
-
 app.use('/api', productRoutes);
 app.use('/api', messageRoutes);
 app.get('/api/admin/ping', requireAuth, (req, res) => {
   res.json({ message: `Hello, ${req.admin.username}. You are logged in.` });
 });
 
+// Central error handler (must stay after all routes)
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(err.status || 500).json({ error: err.message || 'Server error' });
+});
+
+const PORT = process.env.PORT || 4000;
+
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
-    app.listen(process.env.PORT, () => {
-      console.log(`Server running on http://localhost:${process.env.PORT}`);
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
   })
   .catch((err) => console.error('MongoDB connection error:', err));
