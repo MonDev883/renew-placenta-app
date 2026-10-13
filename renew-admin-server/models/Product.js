@@ -7,6 +7,8 @@ const productSchema = new mongoose.Schema({
   size: { type: String, default: "" },
   blurb: { type: String, default: "" },
   best: { type: Boolean, default: false },
+  hidden: { type: Boolean, default: false },
+  outOfStock: { type: Boolean, default: false },
   scope: { type: String, default: "local" },
   imageUrl: { type: String, default: "" },
   images: { type: [String], default: [] },
