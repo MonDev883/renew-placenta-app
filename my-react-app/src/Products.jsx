@@ -8,18 +8,31 @@ const PREVIEW_COUNT = 6;
 
 function Products(){
   const [allProducts, setAllProducts] = useState([]);
+  const [status, setStatus] = useState("loading"); // "loading" | "ready" | "error"
   const [scope, setScope] = useState("local");
   const [filter, setFilter] = useState("All");
   const [showAll, setShowAll] = useState(false);
   const [viewProduct, setViewProduct] = useState(null);
   const cats = ["All", "Soap", "Skincare"];
 
-  useEffect(() => {
+  function loadProducts(){
+    setStatus("loading");
     fetch(`${API}/api/products`)
-      .then(res => res.json())
-      .then(setAllProducts)
-      .catch(() => setAllProducts([]));
-  }, []);
+      .then(res => {
+        if (!res.ok) throw new Error(`Request failed (${res.status})`);
+        return res.json();
+      })
+      .then(data => {
+        setAllProducts(Array.isArray(data) ? data : []);
+        setStatus("ready");
+      })
+      .catch(() => {
+        setAllProducts([]);
+        setStatus("error");
+      });
+  }
+
+  useEffect(() => { loadProducts(); }, []);
 
   const inScope = allProducts.filter(p => (p.scope ?? "local") === scope);
   const filtered = filter === "All" ? inScope : inScope.filter(p => p.cat === filter);
@@ -65,7 +78,27 @@ function Products(){
           ))}
         </div>
 
-        {allProducts.length === 0 && <p className="text-sm opacity-70">Loading products...</p>}
+        {status === "loading" && (
+          <p className="text-sm opacity-70">
+            Loading products... the first visit can take up to a minute while the server wakes up.
+          </p>
+        )}
+
+        {status === "error" && (
+          <div className="text-sm bg-brand-paper border border-brand-green rounded p-4">
+            <p className="mb-2">We couldn't load the products right now.</p>
+            <button
+              onClick={loadProducts}
+              className="text-brand-red font-semibold underline hover:text-brand-red-dark"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {status === "ready" && filtered.length === 0 && (
+          <p className="text-sm opacity-70">No products to show in this category yet.</p>
+        )}
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-5">
           {shown.map(p => <ProductCard key={p._id} product={p} onView={setViewProduct} />)}

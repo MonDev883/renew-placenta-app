@@ -9,32 +9,51 @@ function getImageUrl(url) {
   return relative.startsWith('http') ? relative : `${API}${relative}`;
 }
 
+// Photos for a product: the images list first, then the main imageUrl (older products)
+function getPhotos(product) {
+  if (!product) return [];
+  const raw = product.images?.length
+    ? product.images
+    : (product.imageUrl ? [product.imageUrl] : (product.image ? [product.image] : []));
+  return raw.map(getImageUrl).filter(Boolean);
+}
+
 function ProductGalleryModal({ product, onClose }){
   const [index, setIndex] = useState(0);
+  const photos = getPhotos(product);
+  const count = photos.length;
 
   useEffect(() => {
     setIndex(0);
+    if (!product) return;
+
     function onKey(e){
-      if (!product) return;
-      const rawPhotos = product.images?.length ? product.images : (product.image ? [product.image] : []);
-      const photos = rawPhotos.map(getImageUrl);
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") setIndex(i => (i + 1) % photos.length);
-      if (e.key === "ArrowLeft") setIndex(i => (i - 1 + photos.length) % photos.length);
+      if (count < 2) return;
+      if (e.key === "ArrowRight") setIndex(i => (i + 1) % count);
+      if (e.key === "ArrowLeft") setIndex(i => (i - 1 + count) % count);
     }
+
+    // Stop the page behind the popup from scrolling while it is open
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [product]);
 
   if (!product) return null;
-
-  const rawPhotos = product.images?.length ? product.images : (product.image ? [product.image] : []);
-  const photos = rawPhotos.map(getImageUrl);
 
   return (
     <div
       className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${product.name} photos`}
     >
       <div
         className="bg-brand-paper rounded max-w-lg w-full overflow-hidden"
@@ -48,25 +67,28 @@ function ProductGalleryModal({ product, onClose }){
         </div>
 
         <div className="relative h-72 md:h-96 bg-white flex items-center justify-center">
-          {photos.length > 0 && (
+          {count > 0 ? (
             <img
               src={photos[index]}
               alt={`${product.name} photo ${index + 1}`}
               className="w-full h-full object-contain"
+              onError={(e) => { e.currentTarget.style.display = "none"; }}
             />
+          ) : (
+            <p className="text-sm opacity-60">No photos available for this product.</p>
           )}
 
-          {photos.length > 1 && (
+          {count > 1 && (
             <>
               <button
-                onClick={() => setIndex(i => (i - 1 + photos.length) % photos.length)}
+                onClick={() => setIndex(i => (i - 1 + count) % count)}
                 aria-label="Previous photo"
                 className="absolute left-2 top-1/2 -translate-y-1/2 bg-brand-green/80 hover:bg-brand-green text-white p-1.5 rounded-full"
               >
                 <ChevronLeft size={18}/>
               </button>
               <button
-                onClick={() => setIndex(i => (i + 1) % photos.length)}
+                onClick={() => setIndex(i => (i + 1) % count)}
                 aria-label="Next photo"
                 className="absolute right-2 top-1/2 -translate-y-1/2 bg-brand-green/80 hover:bg-brand-green text-white p-1.5 rounded-full"
               >
@@ -76,7 +98,7 @@ function ProductGalleryModal({ product, onClose }){
           )}
         </div>
 
-        {photos.length > 1 && (
+        {count > 1 && (
           <div className="flex justify-center gap-1.5 py-3">
             {photos.map((_, i) => (
               <button
