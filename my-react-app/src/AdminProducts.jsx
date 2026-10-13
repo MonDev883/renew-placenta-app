@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import { LayoutDashboard, Globe, AlertTriangle, CheckCircle2 } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-const EMPTY_FORM = { name: "", cat: "Soap", price: "", size: "", blurb: "", best: false, scope: "local", images: [], shopeeUrl: "", lazadaUrl: ""};
+const EMPTY_FORM = { name: "", cat: "Soap", price: "", size: "", blurb: "", best: false, hidden: false, outOfStock: false, scope: "local", images: [], shopeeUrl: "", lazadaUrl: ""};
 const MAX_PHOTOS = 12;
 
 // Helper to clean up old localhost URLs stored in MongoDB and point them to Render
@@ -37,7 +37,7 @@ function AdminProducts(){
   }
 
   function loadProducts(){
-    fetch(`${API}/api/products`)
+    fetch(`${API}/api/admin/products`, { headers: { Authorization: `Bearer ${token}`}})
       .then(r => r.json())
       .then(data => setProducts(Array.isArray(data) ? data : []))
       .catch(() => setProducts([]));
@@ -152,6 +152,8 @@ function AdminProducts(){
     setForm({ name: p.name, cat: p.cat, price: p.price, size: p.size, blurb: p.blurb, best: p.best, scope: p.scope, images: p.images?.length ? p.images : (p.imageUrl ? [p.imageUrl] : []), 
       shopeeUrl: p.shopeeUrl || "",
       lazadaUrl: p.lazadaUrl || "",
+      hidden: !!p.hidden,
+      outOfStock: !!p.outOfStock,
     });
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -188,6 +190,27 @@ function AdminProducts(){
       loadProducts();
     }
   }
+
+   async function toggleFlag(p, field){
+     const turningOn = !p[field];
+     try {
+       const res = await fetch(`${API}/api/admin/products/${p._id}/flags`, {
+         method: "PUT",
+         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+         body: JSON.stringify({ [field]: turningOn }),
+       });
+       const data = await res.json().catch(() => ({}));
+       if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`);
+       const text = field === "hidden"
+         ? (turningOn ? `"${p.name}" is now hidden from the website.` : `"${p.name}" is now visible on the website.`)
+         : (turningOn ? `"${p.name}" is marked out of stock.` : `"${p.name}" is back in stock.`);
+       showNotice("success", text);
+     } catch (err) {
+       showNotice("error", err.message);
+     } finally {
+       loadProducts();
+     }
+   }
 
   const filteredProducts = products.filter(p =>
     (p.name || "").toLowerCase().includes(searchTerm.toLowerCase())
@@ -261,6 +284,14 @@ function AdminProducts(){
             <input type="checkbox" checked={form.best} onChange={e => setForm({...form, best: e.target.checked})}/>
             Best seller
           </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.outOfStock} onChange={e => setForm({...form, outOfStock: e.target.checked})}/>
+              Out of stock (shows a label, hides the buy buttons)
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={form.hidden} onChange={e => setForm({...form, hidden: e.target.checked})}/>
+              Hidden (not shown on the public website)
+            </label>
           <textarea placeholder="Description" value={form.blurb} onChange={e => setForm({...form, blurb: e.target.value})} className="border border-brand-green rounded px-3 py-2 text-sm md:col-span-2" rows={2}/>
 
           <input 
@@ -368,25 +399,33 @@ function AdminProducts(){
         <div className="space-y-3">
           {filteredProducts.length > 0 ? (
             filteredProducts.map((p, i) => (
-              <div key={p._id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-brand-paper border border-brand-green rounded p-4">
+                        <div
+                key={p._id}
+                className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-brand-paper border border-brand-green rounded p-4 ${p.hidden ? "opacity-60" : ""}`}
+              >
                 
                 <div className="flex items-center gap-4">
                   {p.imageUrl && <img src={getImageUrl(p.imageUrl)} alt={p.name} className="w-14 h-14 object-contain flex-shrink-0"/>}
                   <div>
-                    <p className="font-semibold text-sm sm:text-base">{p.name}</p>
+                    <p className="font-semibold text-sm sm:text-base">
+                      {p.name}
+                      {p.hidden && <span className="ml-2 text-[10px] font-semibold uppercase bg-brand-ink/10 text-brand-ink px-1.5 py-0.5 rounded">Hidden</span>}
+                      {p.outOfStock && <span className="ml-2 text-[10px] font-semibold uppercase bg-brand-red/10 text-brand-red px-1.5 py-0.5 rounded">Out of stock</span>}
+                    </p>
                     <p className="text-xs text-brand-red">{p.size} · {p.price} · {p.scope} · {p.images?.length || 0} photo(s)</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-brand-green/20">
+                <div className="flex flex-wrap items-center justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-brand-green/20">
                   <button onClick={() => moveProduct(p._id, 'up')} disabled={searching || i === 0} className="text-sm border border-brand-green rounded px-2.5 py-1 disabled:opacity-30">↑</button>
                   <button onClick={() => moveProduct(p._id, 'down')} disabled={searching || i === filteredProducts.length - 1} className="text-sm border border-brand-green rounded px-2.5 py-1 disabled:opacity-30">↓</button>
+                  <button onClick={() => toggleFlag(p, 'outOfStock')} className="text-sm font-medium underline px-2 py-1">{p.outOfStock ? "In stock" : "Out of stock"}</button>
+                  <button onClick={() => toggleFlag(p, 'hidden')} className="text-sm font-medium underline px-2 py-1">{p.hidden ? "Show" : "Hide"}</button>
                   <button onClick={() => startEdit(p)} className="text-sm font-medium underline px-2 py-1">Edit</button>
                   <button onClick={() => handleDelete(p)} className="text-sm font-medium text-brand-red underline px-2 py-1">Delete</button>
                 </div>
 
               </div>
-            ))
           ) : (
             <p className="text-sm opacity-70 bg-brand-paper border border-brand-green rounded p-4 text-center">
               {searching ? `No products found matching "${searchTerm}"` : "No products yet."}
