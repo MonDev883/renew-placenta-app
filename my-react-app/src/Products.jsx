@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Search, X } from 'lucide-react'
 import ProductCard from './ProductCard.jsx'
 import ProductGalleryModal from './ProductGalleryModal.jsx'
 
@@ -11,9 +11,9 @@ function Products(){
   const [status, setStatus] = useState("loading"); // "loading" | "ready" | "error"
   const [scope, setScope] = useState("local");
   const [filter, setFilter] = useState("All");
+  const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
   const [viewProduct, setViewProduct] = useState(null);
-  const cats = ["All", "Soap", "Skincare"];
 
   function loadProducts(){
     setStatus("loading");
@@ -35,8 +35,14 @@ function Products(){
   useEffect(() => { loadProducts(); }, []);
 
   const inScope = allProducts.filter(p => (p.scope ?? "local") === scope);
-  const filtered = filter === "All" ? inScope : inScope.filter(p => p.cat === filter);
-  const shown = showAll ? filtered : filtered.slice(0, PREVIEW_COUNT);
+  const cats = ["All", ...Array.from(new Set(inScope.map(p => p.cat).filter(Boolean)))];
+  const query = search.trim().toLowerCase();
+  const byCategory = filter === "All" ? inScope : inScope.filter(p => p.cat === filter);
+  const filtered = query
+    ? byCategory.filter(p => `${p.name || ""} ${p.blurb || ""} ${p.size || ""}`.toLowerCase().includes(query))
+    : byCategory;
+  // While searching, show every match instead of only the preview
+  const shown = (showAll || query) ? filtered : filtered.slice(0, PREVIEW_COUNT);
 
   return (
     <section id="products" className="py-16 border-b border-brand-green">
@@ -50,7 +56,7 @@ function Products(){
           {[["local", "Local Products"], ["export", "Export Products"]].map(([key, label]) => (
             <button
               key={key}
-              onClick={() => { setScope(key); setFilter("All"); setShowAll(false); }}
+              onClick={() => { setScope(key); setFilter("All"); setSearch(""); setShowAll(false); }}
               className={`px-5 py-2.5 rounded-sm text-sm font-semibold ${
                 scope === key
                   ? "bg-brand-green text-brand-cream"
@@ -60,6 +66,27 @@ function Products(){
               {label}
             </button>
           ))}
+        </div>
+
+        <div className="relative mb-4 max-w-md">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-green"/>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setShowAll(false); }}
+            placeholder="Search products..."
+            aria-label="Search products"
+            className="w-full border border-brand-green bg-brand-paper rounded pl-9 pr-9 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-green"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-green hover:text-brand-red"
+            >
+              <X size={16}/>
+            </button>
+          )}
         </div>
 
         <div className="flex gap-2.5 mb-6 flex-wrap">
@@ -77,6 +104,12 @@ function Products(){
             </button>
           ))}
         </div>
+
+        {query && status === "ready" && (
+          <p className="text-xs opacity-70 mb-4">
+            {filtered.length} {filtered.length === 1 ? "result" : "results"} for "{search.trim()}"
+          </p>
+        )}
 
         {status === "loading" && (
           <p className="text-sm opacity-70">
@@ -97,14 +130,23 @@ function Products(){
         )}
 
         {status === "ready" && filtered.length === 0 && (
-          <p className="text-sm opacity-70">No products to show in this category yet.</p>
+          <div className="text-sm opacity-80">
+            {query ? (
+              <p>
+                No products match "{search.trim()}".{" "}
+                <button onClick={() => setSearch("")} className="text-brand-red font-semibold underline">Clear search</button>
+              </p>
+            ) : (
+              <p>No products to show in this category yet.</p>
+            )}
+          </div>
         )}
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-5">
           {shown.map(p => <ProductCard key={p._id} product={p} onView={setViewProduct} />)}
         </div>
 
-        {filtered.length > PREVIEW_COUNT && (
+        {!query && filtered.length > PREVIEW_COUNT && (
           <button
             onClick={() => setShowAll(s => !s)}
             className="mt-8 mx-auto flex items-center gap-2 text-sm font-semibold text-brand-red hover:text-brand-red-dark"
