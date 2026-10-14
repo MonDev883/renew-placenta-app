@@ -24,7 +24,9 @@ function AdminMessages(){
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
+
       .then(data => setMessages(Array.isArray(data) ? data : []))
+      
       .catch(() => setMessages([]));
   }
 
