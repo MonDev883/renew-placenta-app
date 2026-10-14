@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogIn, Key, Eye, EyeOff } from 'lucide-react'
+import { passwordProblem, PASSWORD_HINT } from './passwordRules.js'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
@@ -48,10 +49,11 @@ function AdminForgotPassword() {
       setError("New passwords do not match.");
       return;
     }
-    if (newPassword.length < 8) {
-      setError("New password must be at least 8 characters.");
-      return;
-    }
+     const problem = passwordProblem(newPassword);
+  if (problem) {
+    setError(problem);
+    return;
+  }
     setLoading(true);
     try {
       await post("reset-password", { username, code, newPassword });

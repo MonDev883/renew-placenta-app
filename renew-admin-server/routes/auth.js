@@ -9,6 +9,7 @@ const requireAuth = require('../middleware/requireAuth');
 const requireRole = require('../middleware/requireRole');
 const { logActivity } = require('../utils/activity');
 const { sendOtpEmail, sendResetEmail } = require('../utils/mailer');
+const { checkPassword } = require('../utils/passwordPolicy');
 
 const router = express.Router();
 const ROLES = ['owner', 'editor', 'support'];
@@ -103,9 +104,8 @@ router.put('/change-password', requireAuth, async (req, res) => {
   if (!currentPassword || !newPassword) {
     return res.status(400).json({ error: 'Current and new password are required' });
   }
-  if (newPassword.length < 8) {
-    return res.status(400).json({ error: 'New password must be at least 8 characters' });
-  }
+  const problem = checkPassword(newPassword);
+   if (problem) return res.status(400).json({ error: problem });
 
   const admin = await Admin.findById(req.admin.id);
   if (!admin) return res.status(404).json({ error: 'Account not found' });
@@ -126,9 +126,8 @@ router.post('/admins', requireAuth, requireRole('owner'), async (req, res) => {
   if (!username || !password || !email) {
     return res.status(400).json({ error: 'Username, password, and email are required' });
   }
-  if (password.length < 8) {
-    return res.status(400).json({ error: 'Password must be at least 8 characters' });
-  }
+  const problem = checkPassword(password);
+   if (problem) return res.status(400).json({ error: problem });
   if (!ROLES.includes(role)) {
     return res.status(400).json({ error: 'Invalid role' });
   }
@@ -233,9 +232,8 @@ router.post('/reset-password', resetLimiter, async (req, res) => {
   if (!username || !code || !newPassword) {
     return res.status(400).json({ error: 'Username, code, and new password are required' });
   }
-  if (newPassword.length < 8) {
-    return res.status(400).json({ error: 'Password must be at least 8 characters' });
-  }
+  const problem = checkPassword(newPassword);
+   if (problem) return res.status(400).json({ error: problem });
 
   const admin = await Admin.findOne({ username });
   if (!admin || !admin.resetCodeHash || !admin.resetExpires) return invalid();

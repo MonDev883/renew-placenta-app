@@ -12,6 +12,14 @@ const ROLE_OPTIONS = [
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
+// Helper function to validate password requirements
+function passwordProblem(password) {
+  if (!password || password.length < 8) {
+    return "Password must be at least 8 characters long.";
+  }
+  return null;
+}
+
 function AdminUsers(){
   const { token } = useAuth();
   const me = useMe();
@@ -44,6 +52,13 @@ function AdminUsers(){
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    const problem = passwordProblem(form.password);
+    if (problem) {
+      setError(problem);
+      return;
+    }
+
     const res = await fetch(`${API}/api/auth/admins`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -54,7 +69,7 @@ function AdminUsers(){
       setError(data.error || `Request failed (${res.status}).`);
       return;
     }
-    setSuccess(`Admin "${data.username}" created as ${data.role}.`);
+    setSuccess(`Admin "${data.username}" created successfully.`);
     setForm({ username: "", email: "", password: "", role: "support" });
     loadAdmins();
   }
@@ -184,7 +199,7 @@ function AdminUsers(){
           </div>
         )}
 
-        {/* Admin List with Responsive Text Wrapping & Shrink Protection */}
+        {/* Admin List */}
         <div className="space-y-2">
           {admins.map(a => {
             const isMe = me?.username === a.username;

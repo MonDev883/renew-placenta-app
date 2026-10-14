@@ -4,6 +4,7 @@ import { LayoutDashboard, Key, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from './AuthContext.jsx'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+const PASSWORD_HINT = "Use a strong password with letters, numbers, and symbols.";
 
 function AdminChangePassword() {
   const { token, logout } = useAuth();
@@ -30,8 +31,7 @@ function AdminChangePassword() {
     setLoading(true);
 
     try {
-     // const res = await fetch(`${API}/api/admin/change-password`, {
-     const res = await fetch(`${API}/api/auth/change-password`, {
+      const res = await fetch(`${API}/api/auth/change-password`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -99,7 +99,7 @@ function AdminChangePassword() {
                 className="w-full px-4 py-2.5 bg-white border border-brand-green/40 rounded focus:outline-none focus:border-brand-green text-sm"
               />
             </div>
-
+            <p className="text-xs opacity-70 -mt-2">{PASSWORD_HINT}</p>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
