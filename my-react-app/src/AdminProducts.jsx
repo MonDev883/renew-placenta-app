@@ -37,7 +37,7 @@ function AdminProducts(){
   }
 
   function loadProducts(){
-    fetch(`${API}/api/admin/products`, { headers: { Authorization: `Bearer ${token}`}})
+    fetch(`${API}/api/admin/products`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => setProducts(Array.isArray(data) ? data : []))
       .catch(() => setProducts([]));
@@ -149,7 +149,15 @@ function AdminProducts(){
 
   function startEdit(p){
     setEditingId(p._id);
-    setForm({ name: p.name, cat: p.cat, price: p.price, size: p.size, blurb: p.blurb, best: p.best, scope: p.scope, images: p.images?.length ? p.images : (p.imageUrl ? [p.imageUrl] : []), 
+    setForm({
+      name: p.name,
+      cat: p.cat,
+      price: p.price,
+      size: p.size,
+      blurb: p.blurb,
+      best: p.best,
+      scope: p.scope,
+      images: p.images?.length ? p.images : (p.imageUrl ? [p.imageUrl] : []),
       shopeeUrl: p.shopeeUrl || "",
       lazadaUrl: p.lazadaUrl || "",
       hidden: !!p.hidden,
@@ -191,26 +199,26 @@ function AdminProducts(){
     }
   }
 
-   async function toggleFlag(p, field){
-     const turningOn = !p[field];
-     try {
-       const res = await fetch(`${API}/api/admin/products/${p._id}/flags`, {
-         method: "PUT",
-         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-         body: JSON.stringify({ [field]: turningOn }),
-       });
-       const data = await res.json().catch(() => ({}));
-       if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`);
-       const text = field === "hidden"
-         ? (turningOn ? `"${p.name}" is now hidden from the website.` : `"${p.name}" is now visible on the website.`)
-         : (turningOn ? `"${p.name}" is marked out of stock.` : `"${p.name}" is back in stock.`);
-       showNotice("success", text);
-     } catch (err) {
-       showNotice("error", err.message);
-     } finally {
-       loadProducts();
-     }
-   }
+  async function toggleFlag(p, field){
+    const turningOn = !p[field];
+    try {
+      const res = await fetch(`${API}/api/admin/products/${p._id}/flags`, {
+        method: "PUT",
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ [field]: turningOn }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`);
+      const text = field === "hidden"
+        ? (turningOn ? `"${p.name}" is now hidden from the website.` : `"${p.name}" is now visible on the website.`)
+        : (turningOn ? `"${p.name}" is marked out of stock.` : `"${p.name}" is back in stock.`);
+      showNotice("success", text);
+    } catch (err) {
+      showNotice("error", err.message);
+    } finally {
+      loadProducts();
+    }
+  }
 
   const filteredProducts = products.filter(p =>
     (p.name || "").toLowerCase().includes(searchTerm.toLowerCase())
@@ -286,26 +294,26 @@ function AdminProducts(){
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={form.outOfStock} onChange={e => setForm({...form, outOfStock: e.target.checked})}/>
-              Out of stock (shows a label, hides the buy buttons)
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={form.hidden} onChange={e => setForm({...form, hidden: e.target.checked})}/>
-              Hidden (not shown on the public website)
-            </label>
+            Out of stock (shows a label, hides the buy buttons)
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.hidden} onChange={e => setForm({...form, hidden: e.target.checked})}/>
+            Hidden (not shown on the public website)
+          </label>
           <textarea placeholder="Description" value={form.blurb} onChange={e => setForm({...form, blurb: e.target.value})} className="border border-brand-green rounded px-3 py-2 text-sm md:col-span-2" rows={2}/>
 
           <input 
-                placeholder="Shopee Product Link (https://shopee.ph/...)" 
-                value={form.shopeeUrl} 
-                onChange={e => setForm({...form, shopeeUrl: e.target.value})} 
-                className="border border-brand-green rounded px-3 py-2 text-sm md:col-span-2"
-              />
+            placeholder="Shopee Product Link (https://shopee.ph/...)" 
+            value={form.shopeeUrl} 
+            onChange={e => setForm({...form, shopeeUrl: e.target.value})} 
+            className="border border-brand-green rounded px-3 py-2 text-sm md:col-span-2"
+          />
           <input 
-                placeholder="Lazada Product Link (https://lazada.com.ph/...)" 
-                value={form.lazadaUrl} 
-                onChange={e => setForm({...form, lazadaUrl: e.target.value})} 
-                className="border border-brand-green rounded px-3 py-2 text-sm md:col-span-2"
-              />
+            placeholder="Lazada Product Link (https://lazada.com.ph/...)" 
+            value={form.lazadaUrl} 
+            onChange={e => setForm({...form, lazadaUrl: e.target.value})} 
+            className="border border-brand-green rounded px-3 py-2 text-sm md:col-span-2"
+          />
 
           <div className="md:col-span-2">
             <label className="block text-sm font-semibold mb-1">
@@ -399,11 +407,10 @@ function AdminProducts(){
         <div className="space-y-3">
           {filteredProducts.length > 0 ? (
             filteredProducts.map((p, i) => (
-                        <div
+              <div
                 key={p._id}
                 className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-brand-paper border border-brand-green rounded p-4 ${p.hidden ? "opacity-60" : ""}`}
               >
-                
                 <div className="flex items-center gap-4">
                   {p.imageUrl && <img src={getImageUrl(p.imageUrl)} alt={p.name} className="w-14 h-14 object-contain flex-shrink-0"/>}
                   <div>
@@ -424,8 +431,8 @@ function AdminProducts(){
                   <button onClick={() => startEdit(p)} className="text-sm font-medium underline px-2 py-1">Edit</button>
                   <button onClick={() => handleDelete(p)} className="text-sm font-medium text-brand-red underline px-2 py-1">Delete</button>
                 </div>
-
               </div>
+            ))
           ) : (
             <p className="text-sm opacity-70 bg-brand-paper border border-brand-green rounded p-4 text-center">
               {searching ? `No products found matching "${searchTerm}"` : "No products yet."}
