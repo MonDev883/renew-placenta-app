@@ -20,6 +20,7 @@ app.set('trust proxy', 1);
 // Extra origins can be added in Render with ALLOWED_ORIGINS (comma-separated).
 const allowedOrigins = [
   'https://renew-placenta.netlify.app',
+  'https://renew-placenta-app.vercel.app',
   'http://localhost:5173',
   ...(process.env.ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean),
 ];
