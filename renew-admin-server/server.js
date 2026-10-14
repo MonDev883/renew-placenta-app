@@ -41,6 +41,11 @@ app.get('/api/admin/ping', requireAuth, (req, res) => {
   res.json({ message: `Hello, ${req.admin.username}. You are logged in.` });
 });
 
+// HEALTH CHECK ENDPOINT
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date() });
+});
+
 // Central error handler (must stay after all routes)
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
