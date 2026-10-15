@@ -4,7 +4,11 @@ import ProductCard from './ProductCard.jsx'
 import ProductGalleryModal from './ProductGalleryModal.jsx'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-const PREVIEW_COUNT = 6;
+
+// 6 products on phones, 12 on larger screens (12 divides evenly into 2, 3, 4 and 6 columns)
+function getPreviewCount(){
+  return typeof window !== "undefined" && window.innerWidth < 640 ? 6 : 12;
+}
 
 function Products(){
   const [allProducts, setAllProducts] = useState([]);
@@ -14,6 +18,13 @@ function Products(){
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
   const [viewProduct, setViewProduct] = useState(null);
+  const [previewCount, setPreviewCount] = useState(getPreviewCount);
+
+  useEffect(() => {
+    function update(){ setPreviewCount(getPreviewCount()); }
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   function loadProducts(){
     setStatus("loading");
@@ -42,21 +53,22 @@ function Products(){
     ? byCategory.filter(p => `${p.name || ""} ${p.blurb || ""} ${p.size || ""}`.toLowerCase().includes(query))
     : byCategory;
   // While searching, show every match instead of only the preview
-  const shown = (showAll || query) ? filtered : filtered.slice(0, PREVIEW_COUNT);
+  const shown = (showAll || query) ? filtered : filtered.slice(0, previewCount);
 
   return (
     <section id="products" className="py-16 border-b border-brand-green">
-      <div className="max-w-5xl mx-auto px-6">
+      <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6">
         <div className="text-brand-red font-semibold text-sm">The range</div>
         <h2 className="font-['Playfair_Display',serif] font-bold text-2xl md:text-3xl mt-1.5 mb-6">
           A few of our best-known formulations
         </h2>
 
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6">
           {[["local", "Local Products"], ["export", "Export Products"]].map(([key, label]) => (
             <button
               key={key}
               onClick={() => { setScope(key); setFilter("All"); setSearch(""); setShowAll(false); }}
+              aria-pressed={scope === key}
               className={`px-5 py-2.5 rounded-sm text-sm font-semibold ${
                 scope === key
                   ? "bg-brand-green text-brand-cream"
@@ -94,6 +106,7 @@ function Products(){
             <button
               key={c}
               onClick={() => { setFilter(c); setShowAll(false); }}
+              aria-pressed={filter === c}
               className={`px-4 py-2 rounded-sm border text-sm ${
                 filter === c
                   ? "bg-brand-green text-brand-cream border-brand-green"
@@ -142,11 +155,11 @@ function Products(){
           </div>
         )}
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-5">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-5">
           {shown.map(p => <ProductCard key={p._id} product={p} onView={setViewProduct} />)}
         </div>
 
-        {!query && filtered.length > PREVIEW_COUNT && (
+        {!query && filtered.length > previewCount && (
           <button
             onClick={() => setShowAll(s => !s)}
             className="mt-8 mx-auto flex items-center gap-2 text-sm font-semibold text-brand-red hover:text-brand-red-dark"

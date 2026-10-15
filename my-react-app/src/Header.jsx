@@ -16,18 +16,19 @@ function Header(){
 
   useEffect(() => {
     function onScroll(){ setScrolled(window.scrollY > 12); }
-    window.addEventListener("scroll", onScroll);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
-    <header className={`sticky top-0 z-20 bg-brand-cream text-brand-ink transition-shadow relative ${scrolled ? "shadow-lg shadow-black/10" : ""}`}>
-      <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 px-6 py-1.5 relative z-10">
+    <header className={`sticky top-0 z-20 bg-brand-cream text-brand-ink transition-shadow ${scrolled ? "shadow-lg shadow-black/10" : ""}`}>
+      <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto flex items-center justify-between gap-3 px-6 py-1.5 relative z-10">
         
         {/* Logo and Tagline */}
         <div className="flex items-center gap-3">
           <img src={renewLogo} alt="Renew Placenta Herbal Beauty Products" className="h-12 sm:h-16 md:h-20 lg:h-24 w-auto"/>
-<img src={renewTagline} alt="Refreshed & Renewed" className="h-8 sm:h-12 md:h-14 lg:h-16 w-auto"/>
+          <img src={renewTagline} alt="Refreshed & Renewed" className="h-8 sm:h-12 md:h-14 lg:h-16 w-auto"/>
         </div>
 
         {/* Desktop & Tablet Navigation */}
@@ -48,6 +49,7 @@ function Header(){
           className="md:hidden p-2 -mr-2"
           onClick={() => setMenuOpen(o => !o)}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
         >
           {menuOpen ? <X size={24}/> : <Menu size={24}/>}
         </button>

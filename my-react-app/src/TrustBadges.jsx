@@ -10,11 +10,11 @@ const BADGES = [
 function TrustBadges(){
   return (
     <section className="py-12 border-b border-brand-green">
-      <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-5">
+      <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 lg:gap-8">
         {BADGES.map(({ icon: Icon, title, desc }) => (
           <div
             key={title}
-            className="group bg-brand-paper border border-brand-green rounded p-5 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/10"
+            className="group bg-brand-paper border border-brand-green rounded p-4 sm:p-5 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/10"
           >
             <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-brand-green flex items-center justify-center transition-colors group-hover:bg-brand-red">
               <Icon className="text-white" size={22} strokeWidth={1.75}/>

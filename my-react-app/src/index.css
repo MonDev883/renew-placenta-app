@@ -51,3 +51,7 @@ html {
   scrollbar-width: thin;
   scrollbar-color: var(--color-brand-red) var(--color-brand-cream);
 }
+html { scroll-padding-top: 5rem; }
+@media (min-width: 1024px) {
+  html { scroll-padding-top: 7.5rem; }
+}

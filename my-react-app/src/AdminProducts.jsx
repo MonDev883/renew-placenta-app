@@ -47,6 +47,18 @@ function AdminProducts(){
 
   async function handleImageUpload(e){
     const files = Array.from(e.target.files);
+
+        const room = MAX_PHOTOS - form.images.length;
+    if (room <= 0) {
+      showNotice("error", `You can add up to ${MAX_PHOTOS} photos per product.`);
+      e.target.value = "";
+      return;
+    }
+    if (files.length > room) {
+      showNotice("error", `Only ${room} more photo(s) can be added, so the extra files were skipped.`);
+      files.length = room;
+    }
+
     if (files.length === 0) return;
     setUploading(true);
 
@@ -240,10 +252,10 @@ function AdminProducts(){
     <div className="min-h-screen bg-brand-cream px-6 py-10">
       <div className="max-w-5xl mx-auto">
         
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
           <h1 className="font-display font-semibold text-2xl">Manage Products</h1>
           <div className="flex gap-3">
-            <nav className="flex items-center gap-10">
+            <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
               <Link 
                 to="/admin" 
                 className="group flex items-center gap-1.5 text-sm font-semibold tracking-wider uppercase text-brand-green transition-colors duration-200"

@@ -1,12 +1,11 @@
-import renewLogo from './assets/renew-logo.png'
 import ProductSlideshow from './ProductSlideshow.jsx'
 
 function Hero(){
   return (
     <div className="bg-brand-green text-brand-cream">
-      <div className="max-w-5xl mx-auto px-6 py-14 md:py-18">
-       <div className="animate-fade-up">
-          <h1 className="font-['Playfair_Display',serif] italic font-bold text-4xl md:text-5xl leading-tight">
+      <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6 py-14 md:py-16 grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+        <div className="animate-fade-up min-w-0">
+          <h1 className="font-['Playfair_Display',serif] italic font-bold text-4xl md:text-5xl 2xl:text-6xl leading-tight">
             Trusted for almost 25 years in skincare and personal care.
           </h1>
           <p className="mt-4 max-w-md text-lg opacity-90">
@@ -22,7 +21,9 @@ function Hero(){
           </div>
         </div>
 
-        <ProductSlideshow/>
+        <div className="min-w-0">
+          <ProductSlideshow/>
+        </div>
       </div>
     </div>
   );
