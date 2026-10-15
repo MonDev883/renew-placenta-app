@@ -31,17 +31,21 @@ function PublicSite(){
     const timer = setTimeout(() => {
       setLoadingMessage("Waking up server, please wait a moment...");
     }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
 
-  useEffect(() => {
-    fetch(`${API}/api/products`)
+    // Keep the loading screen visible for at least 9 seconds
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 9000));
+    const fetchProducts = fetch(`${API}/api/products`)
       .then(res => {
         if (!res.ok) throw new Error();
         return res.json();
       })
+      .catch(() => {});
+
+    Promise.all([fetchProducts, minLoadTime])
       .then(() => setIsLoading(false))
       .catch(() => setIsLoading(false));
+
+    return () => clearTimeout(timer);
   }, []);
 
   if (isLoading) {
