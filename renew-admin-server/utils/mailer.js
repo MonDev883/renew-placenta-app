@@ -71,7 +71,7 @@ async function sendNewMessageAlert(msg) {
     replyTo,
     subject: `New website message from ${name}`,
     text: `From: ${name}\nEmail: ${msg.email || 'not provided'}\n\n${msg.message || ''}\n\nOpen the admin panel to view and reply.`,
-    html: `<p><b>From:</b> ${escapeHtml(name)}<br><b>Email:</b> ${escapeHtml(msg.email || 'not provided')}</p><p>${escapeHtml(msg.message || '').replace(/\n/g, '<br>')}</p><p><a href="https://renew-placenta.netlify.app/admin/messages">Open the admin panel to view and reply</a></p>`,
+    html: `<p><b>From:</b> ${escapeHtml(name)}<br><b>Email:</b> ${escapeHtml(msg.email || 'not provided')}</p><p>${escapeHtml(msg.message || '').replace(/\n/g, '<br>')}</p><p><a href="https://renew-placenta.vercel.app/admin/messages">Open the admin panel to view and reply</a></p>`,
   });
   console.log('New message alert sent');
 }
