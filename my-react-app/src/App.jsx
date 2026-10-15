@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Header from './Header.jsx'
 import Hero from './Hero.jsx'
@@ -18,8 +19,52 @@ import AdminForgotPassword from './AdminForgotPassword.jsx'
 import ProtectedRoute from './ProtectedRoute.jsx'
 import { Eye, EyeOff } from 'lucide-react'
 import AdminActivity from './AdminActivity.jsx'
+import logoImg from '/favicon.png'
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 function PublicSite(){
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState("Loading Renew Placenta...");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoadingMessage("Waking up server, please wait a moment...");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    fetch(`${API}/api/products`)
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(() => setIsLoading(false))
+      .catch(() => setIsLoading(false));
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#FDFBF7] px-4 text-center">
+        <div className="relative flex items-center justify-center mb-5">
+          <div className="absolute h-24 w-24 rounded-full border-4 border-emerald-600/20 border-t-emerald-600 animate-spin"></div>
+          <img
+            src={logoImg}
+            alt="Renew Placenta Logo"
+            className="h-12 w-12 object-contain animate-pulse relative z-10"
+          />
+        </div>
+        <h3 className="font-['Playfair_Display',serif] text-2xl font-semibold text-emerald-900 mb-2">
+          Renew Placenta
+        </h3>
+        <p className="text-sm text-emerald-700/80 max-w-sm animate-pulse">
+          {loadingMessage}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
       <Header/>
