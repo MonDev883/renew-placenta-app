@@ -134,8 +134,7 @@ function Products(){
             {filtered.length} {filtered.length === 1 ? "result" : "results"} for "{search.trim()}"
           </p>
         )}
-
-        {status === "loading" && (
+      {status === "loading" && (
           <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
             <div className="relative flex items-center justify-center mb-5">
               <div className="absolute h-20 w-20 rounded-full border-4 border-emerald-600/20 border-t-emerald-600 animate-spin"></div>
