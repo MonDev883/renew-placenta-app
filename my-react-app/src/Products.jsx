@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ChevronDown, ChevronUp, Search, X } from 'lucide-react'
 import ProductCard from './ProductCard.jsx'
 import ProductGalleryModal from './ProductGalleryModal.jsx'
+import logoImg from '/favicon.png'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -139,7 +140,7 @@ function Products(){
             <div className="relative flex items-center justify-center mb-5">
               <div className="absolute h-20 w-20 rounded-full border-4 border-emerald-600/20 border-t-emerald-600 animate-spin"></div>
               <img
-                src="/favicon.png"
+                src="logoImg"
                 alt="Renew Placenta Logo"
                 className="h-10 w-10 object-contain animate-pulse relative z-10"
               />
