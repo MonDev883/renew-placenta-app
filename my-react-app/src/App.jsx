@@ -25,13 +25,8 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 function PublicSite(){
   const [isLoading, setIsLoading] = useState(true);
-  const [loadingMessage, setLoadingMessage] = useState("Loading Renew Placenta...");
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoadingMessage("Waking up server, please wait a moment...");
-    }, 3000);
-
     // Keep the loading screen visible for at least 9 seconds
     const minLoadTime = new Promise(resolve => setTimeout(resolve, 9000));
     const fetchProducts = fetch(`${API}/api/products`)
@@ -44,18 +39,16 @@ function PublicSite(){
     Promise.all([fetchProducts, minLoadTime])
       .then(() => setIsLoading(false))
       .catch(() => setIsLoading(false));
-
-    return () => clearTimeout(timer);
   }, []);
 
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#FDFBF7] px-4 text-center">
         <div className="relative flex items-center justify-center mb-6">
-          {/* Outer spinning ring - enlarged to h-36 w-36 */}
+          {/* Outer spinning ring - h-36 w-36 */}
           <div className="absolute h-36 w-36 rounded-full border-4 border-emerald-600/20 border-t-emerald-600 animate-spin"></div>
           
-          {/* Logo image - enlarged to h-20 w-20 */}
+          {/* Logo image - h-20 w-20 */}
           <img
             src={logoImg}
             alt="Renew Placenta Logo"
@@ -66,7 +59,7 @@ function PublicSite(){
           Renew Placenta
         </h3>
         <p className="text-sm text-emerald-700/80 max-w-sm animate-pulse">
-          {loadingMessage}
+          Loading Renew Placenta...
         </p>
       </div>
     );
