@@ -10,6 +10,7 @@ const adminSchema = new mongoose.Schema({
   resetCodeHash: String,
   resetExpires: Date,
   resetAttempts: { type: Number, default: 0 },
+  passwordChangedAt: { type: Date },
 });
 
 module.exports = mongoose.model('Admin', adminSchema);

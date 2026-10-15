@@ -93,10 +93,10 @@ router.post('/verify-otp', loginLimiter, async (req, res) => {
 });
 
 // Any logged-in admin: who am I (used by the frontend to show or hide features)
-router.get('/me', requireAuth, requireRole(), async (req, res) => {
-  const { username, email, role } = req.adminUser;
-  res.json({ username, email, role });
-});
+   router.get('/me', requireAuth, requireRole(), async (req, res) => {
+     const { username, email, role, passwordChangedAt } = req.adminUser;
+     res.json({ username, email, role, needsPasswordChange: !passwordChangedAt });
+   });
 
 // Any logged-in admin: change own password
 router.put('/change-password', requireAuth, async (req, res) => {
@@ -114,6 +114,7 @@ router.put('/change-password', requireAuth, async (req, res) => {
   if (!matches) return res.status(401).json({ error: 'Current password is incorrect' });
 
   admin.passwordHash = await bcrypt.hash(newPassword, 10);
+  admin.passwordChangedAt = new Date();
   await admin.save();
 
   await logActivity(req, { actor: admin, action: 'password.change', target: admin.username });
@@ -252,6 +253,7 @@ router.post('/reset-password', resetLimiter, async (req, res) => {
   }
 
   admin.passwordHash = await bcrypt.hash(newPassword, 10);
+  admin.passwordChangedAt = new Date();
   admin.resetCodeHash = undefined;
   admin.resetExpires = undefined;
   admin.resetAttempts = 0;

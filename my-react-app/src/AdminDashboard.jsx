@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, LogOut, Globe, TrendingUp, Mail, Users, Key, ClipboardList } from 'lucide-react'
+import { Package, LogOut, Globe, TrendingUp, Mail, Users, Key, ClipboardList, X } from 'lucide-react'
 import { useAuth } from './AuthContext.jsx'
 import { useMe } from './useMe.js'
 import renewLogo from './assets/renew-logo-v2.png'
@@ -17,6 +17,24 @@ function AdminDashboard(){
   const { token, logout } = useAuth();
   const me = useMe();
   const role = me?.role;
+
+    const [showReminder, setShowReminder] = useState(false);
+
+  // Decide whether to show the reminder (once per login session)
+  useEffect(() => {
+    if (!me?.needsPasswordChange || !token) return;
+    const key = `pwReminderShown:${token.slice(-12)}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    setShowReminder(true);
+  }, [me, token]);
+
+  // Hide it automatically after 8 seconds
+  useEffect(() => {
+    if (!showReminder) return;
+    const timer = setTimeout(() => setShowReminder(false), 8000);
+    return () => clearTimeout(timer);
+  }, [showReminder]);
   const [username, setUsername] = useState("");
   const [productCount, setProductCount] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -66,6 +84,29 @@ function AdminDashboard(){
         .animate-dash-3 { animation: fadeInSlide 0.4s ease-out 0.15s forwards; opacity: 0; }
         .animate-dash-4 { animation: fadeInSlide 0.4s ease-out 0.2s forwards; opacity: 0; }
       `}</style>
+
+              {showReminder && (
+        <div
+          role="alert"
+          className="animate-dash-1 fixed top-5 inset-x-0 mx-auto z-50 w-[calc(100%-2rem)] max-w-md bg-brand-paper border border-brand-red rounded shadow-lg p-4 flex items-start gap-3"
+        >
+          <Key size={18} className="text-brand-red mt-0.5 shrink-0"/>
+          <div className="flex-1 text-sm">
+            <p className="font-semibold text-brand-red">Please change your password</p>
+            <p className="mt-0.5">You are still using the password you were given. For your security, set your own password now.</p>
+            <Link to="/admin/change-password" className="inline-block mt-2 font-semibold text-brand-green underline">
+              Change password
+            </Link>
+          </div>
+          <button
+            onClick={() => setShowReminder(false)}
+            aria-label="Close"
+            className="text-brand-ink/60 hover:text-brand-red"
+          >
+            <X size={16}/>
+          </button>
+        </div>
+      )}
 
       <div className="max-w-3xl mx-auto w-full">
         <div className="flex items-center gap-3 mb-8 animate-dash-1">

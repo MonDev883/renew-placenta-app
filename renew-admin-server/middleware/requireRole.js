@@ -2,7 +2,7 @@ const Admin = require('../models/Admin');
 
 module.exports = function requireRole(...allowed) {
   return async (req, res, next) => {
-    const admin = await Admin.findById(req.admin.id).select('username email role');
+    const admin = await Admin.findById(req.admin.id).select('username email role passwordChangedAt');
     if (!admin) {
       return res.status(401).json({ error: 'This account no longer exists. Please log in again.' });
     }
