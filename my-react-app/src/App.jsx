@@ -51,12 +51,15 @@ function PublicSite(){
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#FDFBF7] px-4 text-center">
-        <div className="relative flex items-center justify-center mb-5">
-          <div className="absolute h-24 w-24 rounded-full border-4 border-emerald-600/20 border-t-emerald-600 animate-spin"></div>
+        <div className="relative flex items-center justify-center mb-6">
+          {/* Outer spinning ring - enlarged to h-36 w-36 */}
+          <div className="absolute h-36 w-36 rounded-full border-4 border-emerald-600/20 border-t-emerald-600 animate-spin"></div>
+          
+          {/* Logo image - enlarged to h-20 w-20 */}
           <img
             src={logoImg}
             alt="Renew Placenta Logo"
-            className="h-12 w-12 object-contain animate-pulse relative z-10"
+            className="h-20 w-20 object-contain animate-pulse relative z-10"
           />
         </div>
         <h3 className="font-['Playfair_Display',serif] text-2xl font-semibold text-emerald-900 mb-2">
