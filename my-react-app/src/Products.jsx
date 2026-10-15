@@ -140,7 +140,7 @@ function Products(){
             <div className="relative flex items-center justify-center mb-5">
               <div className="absolute h-20 w-20 rounded-full border-4 border-emerald-600/20 border-t-emerald-600 animate-spin"></div>
               <img
-                src="logoImg"
+                src={logoImg}
                 alt="Renew Placenta Logo"
                 className="h-10 w-10 object-contain animate-pulse relative z-10"
               />
