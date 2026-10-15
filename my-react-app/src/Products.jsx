@@ -20,6 +20,16 @@ function Products(){
   const [viewProduct, setViewProduct] = useState(null);
   const [previewCount, setPreviewCount] = useState(getPreviewCount);
 
+  const [loadingMessage, setLoadingMessage] = useState("Loading Renew Placenta...");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoadingMessage("Waking up server, please wait a moment...");
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     function update(){ setPreviewCount(getPreviewCount()); }
     window.addEventListener('resize', update);
@@ -125,9 +135,22 @@ function Products(){
         )}
 
         {status === "loading" && (
-          <p className="text-sm opacity-70">
-            Loading products... the first visit can take up to a minute while the server wakes up.
-          </p>
+          <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+            <div className="relative flex items-center justify-center mb-5">
+              <div className="absolute h-20 w-20 rounded-full border-4 border-emerald-600/20 border-t-emerald-600 animate-spin"></div>
+              <img
+                src="/favicon.png"
+                alt="Renew Placenta Logo"
+                className="h-10 w-10 object-contain animate-pulse relative z-10"
+              />
+            </div>
+            <h3 className="font-['Playfair_Display',serif] text-lg font-semibold text-emerald-900 mb-1">
+              Renew Placenta
+            </h3>
+            <p className="text-xs sm:text-sm text-emerald-700/80 max-w-sm animate-pulse">
+              {loadingMessage}
+            </p>
+          </div>
         )}
 
         {status === "error" && (
@@ -155,18 +178,22 @@ function Products(){
           </div>
         )}
 
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-5">
-          {shown.map(p => <ProductCard key={p._id} product={p} onView={setViewProduct} />)}
-        </div>
+        {status === "ready" && (
+          <>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-5">
+              {shown.map(p => <ProductCard key={p._id} product={p} onView={setViewProduct} />)}
+            </div>
 
-        {!query && filtered.length > previewCount && (
-          <button
-            onClick={() => setShowAll(s => !s)}
-            className="mt-8 mx-auto flex items-center gap-2 text-sm font-semibold text-brand-red hover:text-brand-red-dark"
-          >
-            {showAll ? "View less" : `View all ${filtered.length} products`}
-            {showAll ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
-          </button>
+            {!query && filtered.length > previewCount && (
+              <button
+                onClick={() => setShowAll(s => !s)}
+                className="mt-8 mx-auto flex items-center gap-2 text-sm font-semibold text-brand-red hover:text-brand-red-dark"
+              >
+                {showAll ? "View less" : `View all ${filtered.length} products`}
+                {showAll ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+              </button>
+            )}
+          </>
         )}
       </div>
 
