@@ -12,6 +12,7 @@ const productRoutes = require('./routes/products');
 const messageRoutes = require('./routes/messages');
 const requireAuth = require('./middleware/requireAuth');
 const Admin = require('./models/Admin');
+const siteContentRoutes = require('./routes/siteContent');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -38,6 +39,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api', productRoutes);
 app.use('/api', messageRoutes);
+app.use('/api', siteContentRoutes);
 app.get('/api/admin/ping', requireAuth, (req, res) => {
   res.json({ message: `Hello, ${req.admin.username}. You are logged in.` });
 });

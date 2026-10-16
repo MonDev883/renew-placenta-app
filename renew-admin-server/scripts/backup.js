@@ -11,6 +11,7 @@ const Product = require('../models/Product');
 const Message = require('../models/Message');
 const Admin = require('../models/Admin');
 const ActivityLog = require('../models/ActivityLog');
+const SiteContent = require('../models/SiteContent');
 
 async function main() {
   if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is missing from .env');
@@ -28,6 +29,7 @@ async function main() {
     // Admins are saved WITHOUT password hashes or codes
     admins: await Admin.find().select('username email role').lean(),
     activity: await ActivityLog.find().sort({ createdAt: -1 }).limit(1000).lean(),
+    siteContent: await SiteContent.find().lean(),
   };
 
   const file = path.join(dir, `backup-${stamp}.json`);
