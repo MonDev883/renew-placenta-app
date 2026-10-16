@@ -1,12 +1,12 @@
 import { Phone, Mail, MapPin, Clock } from 'lucide-react'
-import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from 'react-icons/fa'
+import { FaFacebook, FaInstagram, FaYoutube, FaTwitter, FaFacebookMessenger } from 'react-icons/fa'
 import { useSiteContent } from './useSiteContent.js'
 import { useState } from 'react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 function Contact(){
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", inquiryType: "Product question", message: "" });
   const [status, setStatus] = useState("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const { contact } = useSiteContent();
@@ -25,7 +25,7 @@ function Contact(){
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Something went wrong. Please try again.");
       }
-      setForm({ name: "", email: "", message: "" });
+      setForm({ name: "", email: "", inquiryType: "Product question", message: "" });
       setStatus("sent");
     } catch (err) {
       // A TypeError means the server could not be reached at all
@@ -69,6 +69,18 @@ function Contact(){
             <a href="https://www.youtube.com/c/RenewPlacenta" target="_blank" rel="noreferrer" aria-label="YouTube" className="text-[#FF0000] hover:text-brand-red transition-colors"><FaYoutube size={20}/></a>
             <a href="https://x.com/renewplacenta" target="_blank" rel="noreferrer" aria-label="X (Twitter)" className="text-[#1DA1F2] hover:text-brand-red transition-colors"><FaTwitter size={20}/></a>
           </div>
+
+          <div className="mt-5">
+            <a
+              href="https://m.me/RenewPlacentaOfficial"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 bg-[#0084FF] hover:bg-[#006bdd] text-white font-semibold px-4 py-2.5 rounded text-sm transition-colors shadow-sm"
+            >
+              <FaFacebookMessenger size={18} />
+              Message us on Messenger
+            </a>
+          </div>
         </div>
         <div>
           <h3 className="font-semibold mb-4 flex items-center gap-2"><Clock size={18} className="text-brand-red"/> Business hours</h3>
@@ -101,6 +113,16 @@ function Contact(){
             className="border border-brand-green rounded px-3 py-2 text-sm"
             required
           />
+          <select
+            value={form.inquiryType}
+            onChange={(e) => setForm({ ...form, inquiryType: e.target.value })}
+            className="border border-brand-green rounded px-3 py-2 text-sm bg-white md:col-span-2"
+            required
+          >
+            <option value="Product question">Product question</option>
+            <option value="Bulk order">Bulk order</option>
+            <option value="Distributor / export">Distributor / export</option>
+          </select>
           <textarea
             placeholder="Your message"
             value={form.message}

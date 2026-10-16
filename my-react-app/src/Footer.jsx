@@ -9,7 +9,7 @@ function Footer(){
     <footer className="bg-brand-green-deep text-brand-cream py-10 text-sm">
       <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6">
         <div className="flex flex-wrap justify-between gap-5 mb-6">
-          <div className="font-display text-lg">Renew Herbal Beauty Products</div>
+          <div className="font-display text-lg">Renew Herbal Beauty Products Since 1998</div>
           <div className="flex gap-4 flex-wrap opacity-85">
             <span>Privacy Policy</span>
             <span>Terms of Service</span>

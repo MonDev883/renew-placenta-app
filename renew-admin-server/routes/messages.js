@@ -17,7 +17,7 @@ const contactLimiter = rateLimit({
 
 // Public: anyone can submit the contact form
 router.post('/messages', contactLimiter, async (req, res) => {
-  const { name, email, message } = req.body;
+  const { name, email, inquiryType, message } = req.body;
   if (!name || !email || !message) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -28,7 +28,12 @@ router.post('/messages', contactLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Message is too long' });
   }
 
-  const saved = await Message.create({ name, email, message });
+  const saved = await Message.create({
+    name,
+    email,
+    inquiryType: inquiryType || 'Product question',
+    message,
+  });
 
   // Email alert: not awaited, so a failed email never blocks the customer
   sendNewMessageAlert(saved).catch((err) =>

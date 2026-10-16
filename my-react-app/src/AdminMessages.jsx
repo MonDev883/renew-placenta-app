@@ -24,9 +24,7 @@ function AdminMessages(){
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
-
       .then(data => setMessages(Array.isArray(data) ? data : []))
-      
       .catch(() => setMessages([]));
   }
 
@@ -95,11 +93,15 @@ function AdminMessages(){
             <div key={m._id} className={`border rounded p-4 ${m.read ? "bg-brand-paper border-brand-line" : "bg-white border-brand-green"}`}>
               <div className="flex justify-between items-start gap-3">
                 <div>
-                  <p className="font-semibold">
-                    {m.name} 
-                    {/* Responsive email drop for small mobile screens */}
-                    <span className="font-normal opacity-60 text-sm block sm:inline"> — {m.email}</span>
-                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <p className="font-semibold">
+                      {m.name} 
+                      <span className="font-normal opacity-60 text-sm block sm:inline"> — {m.email}</span>
+                    </p>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      {m.inquiryType || "Product question"}
+                    </span>
+                  </div>
                   <p className="text-xs opacity-60">{new Date(m.createdAt).toLocaleString()}</p>
                 </div>
 
@@ -138,7 +140,7 @@ function AdminMessages(){
 
       </div>
 
-      {/* Floating notice (always visible at the top of the screen) */}
+      {/* Floating notice */}
       {notice && (
         <div
           role="alert"
