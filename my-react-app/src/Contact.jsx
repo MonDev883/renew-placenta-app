@@ -1,6 +1,6 @@
 import { Phone, Mail, MapPin, Clock } from 'lucide-react'
 import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from 'react-icons/fa'
-
+import { useSiteContent } from './useSiteContent.js'
 import { useState } from 'react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
@@ -9,7 +9,8 @@ function Contact(){
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState("idle");
   const [errorMsg, setErrorMsg] = useState("");
-
+  const { contact } = useSiteContent();
+  
   async function handleSubmit(e){
     e.preventDefault();
     setStatus("sending");
@@ -45,15 +46,21 @@ function Contact(){
           <div className="space-y-3 text-sm">
             <div className="flex gap-3">
               <MapPin size={18} className="text-brand-red shrink-0 mt-0.5"/>
-              <span>#610 Blumentritt Ext., Brgy. 536<br/>Sampaloc, Manila, Metro Manila, Philippines</span>
+              <span>
+                {contact?.address ? contact.address.split('\n').map((line, i) => (
+                  <span key={i}>{i > 0 && <br/>}{line}</span>
+                )) : (
+                  <>#610 Blumentritt Ext., Brgy. 536<br/>Sampaloc, Manila, Metro Manila, Philippines</>
+                )}
+              </span>
             </div>
             <div className="flex gap-3">
               <Phone size={18} className="text-brand-red shrink-0 mt-0.5"/>
-              <span className="min-w-0 break-words">(+63) 917 817 6736 · (+63) 922 845 8284 · (02) 8251 4850</span>
+              <span className="min-w-0 break-words">{contact?.phones || "(+63) 917 817 6736 · (+63) 922 845 8284 · (02) 8251 4850"}</span>
             </div>
             <div className="flex gap-3">
               <Mail size={18} className="text-brand-red shrink-0 mt-0.5"/>
-              <span className="min-w-0 break-words">rene@renewplacenta.com · pureformcosmetics@yahoo.com</span>
+              <span className="min-w-0 break-words">{contact?.emails || "rene@renewplacenta.com · pureformcosmetics@yahoo.com"}</span>
             </div>
           </div>
           <div className="flex items-center gap-4 mt-5">
@@ -67,9 +74,9 @@ function Contact(){
           <h3 className="font-semibold mb-4 flex items-center gap-2"><Clock size={18} className="text-brand-red"/> Business hours</h3>
           <table className="w-full text-sm border-collapse">
             <tbody>
-              <tr className="border-b border-brand-green"><td className="py-1.5">Monday – Friday</td><td className="py-1.5 text-right">8:00 AM – 5:00 PM</td></tr>
-              <tr className="border-b border-brand-green"><td className="py-1.5">Saturday</td><td className="py-1.5 text-right">8:00 AM – 3:00 PM</td></tr>
-              <tr className="border-b border-brand-green"><td className="py-1.5">Sunday</td><td className="py-1.5 text-right">Closed</td></tr> 
+              {contact?.hours?.map((row, i) => (
+                <tr key={i} className="border-b border-brand-green"><td className="py-1.5">{row.day}</td><td className="py-1.5 text-right">{row.time}</td></tr>
+              ))}
             </tbody>
           </table>
         </div>

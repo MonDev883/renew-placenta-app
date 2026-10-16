@@ -20,6 +20,7 @@ const LABELS = {
   'product.reorder': 'Reordered products',
   'message.read': 'Marked message as read',
   'message.delete': 'Deleted message',
+  'content.update': 'Edited website content',
 };
 
 function AdminActivity(){

@@ -1,15 +1,18 @@
 import ProductSlideshow from './ProductSlideshow.jsx'
+import { useSiteContent } from './useSiteContent.js'
 
 function Hero(){
+  const { hero } = useSiteContent();
+
   return (
     <div className="bg-brand-green text-brand-cream">
       <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6 py-14 md:py-16 grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
         <div className="animate-fade-up min-w-0">
           <h1 className="font-['Playfair_Display',serif] italic font-bold text-4xl md:text-5xl 2xl:text-6xl leading-tight">
-            Trusted for almost 25 years in skincare and personal care.
+            {hero.heading}
           </h1>
           <p className="mt-4 max-w-md text-lg opacity-90">
-            Renew Herbal Beauty Products are trusted for almost 25 years in the line of skincare and personal care products.
+            {hero.paragraph}
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a href="#products" className="bg-brand-red hover:bg-brand-red-dark text-white font-semibold px-6 py-3 rounded-sm">

@@ -20,6 +20,7 @@ import ProtectedRoute from './ProtectedRoute.jsx'
 import { Eye, EyeOff } from 'lucide-react'
 import AdminActivity from './AdminActivity.jsx'
 import logoImg from '/favicon.png'
+import AdminContent from './AdminContent.jsx'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -116,7 +117,12 @@ function App(){
           <AdminActivity/>
         </ProtectedRoute>
       } />
-    </Routes>
+    <Route path="/admin/content" element={
+        <ProtectedRoute>
+          <AdminContent/>
+        </ProtectedRoute>
+      } />
+      </Routes>
   );
 }
 

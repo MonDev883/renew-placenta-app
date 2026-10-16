@@ -1,6 +1,8 @@
 import { Shield } from 'lucide-react'
+import { useSiteContent } from './useSiteContent.js'
 
 function Footer(){
+  const { footer } = useSiteContent();
   const year = new Date().getFullYear();
 
   return (
@@ -11,7 +13,7 @@ function Footer(){
           <div className="flex gap-4 flex-wrap opacity-85">
             <span>Privacy Policy</span>
             <span>Terms of Service</span>
-            <span>© 1998–{year} Pureform Cosmetics</span>
+            <span>© 1998–{year} {footer.copyrightName}</span>
             <a
               href="/admin"
               className="relative flex items-center gap-1 py-1 opacity-80 hover:opacity-100 transition-opacity after:content-[''] after:absolute after:left-0 after:-bottom-0.5 after:h-[1px] after:w-0 after:bg-brand-cream after:transition-all after:duration-300 hover:after:w-full"
@@ -22,9 +24,9 @@ function Footer(){
           </div>
         </div>
         <div className="opacity-75 space-y-2.5 max-w-4xl xl:max-w-5xl text-left sm:text-justify">
-          <p>All Renew and Truderm products carry a valid Certificate of Product Notification (CPN) from the Philippine FDA, meeting the safety and labeling standards required before market release.</p>
-          <p>As with any cosmetic product made from natural botanical and herbal ingredients, individual sensitivities can vary. We recommend a 24-hour patch test before full use, and discontinuing use if irritation occurs.</p>
-          <p>Information on this site is for cosmetic and educational purposes only and is not medical advice. Consult a dermatologist for specific skin conditions, or before use if pregnant or nursing.</p>
+          {[footer.notice1, footer.notice2, footer.notice3].filter(Boolean).map((note, i) => (
+            <p key={i}>{note}</p>
+          ))}
         </div>
       </div>
     </footer>

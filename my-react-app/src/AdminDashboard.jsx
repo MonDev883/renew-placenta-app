@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, LogOut, Globe, TrendingUp, Mail, Users, Key, ClipboardList, X } from 'lucide-react'
+import { Package, LogOut, Globe, TrendingUp, Mail, Users, Key, ClipboardList, FileText, X } from 'lucide-react'
 import { useAuth } from './AuthContext.jsx'
 import { useMe } from './useMe.js'
 import renewLogo from './assets/renew-logo-v2.png'
@@ -18,9 +18,12 @@ function AdminDashboard(){
   const me = useMe();
   const role = me?.role;
 
-    const [showReminder, setShowReminder] = useState(false);
+  const [username, setUsername] = useState("");
+  const [productCount, setProductCount] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showReminder, setShowReminder] = useState(false);
 
-  // Decide whether to show the reminder (once per login session)
+  // Decide whether to show the password reminder (once per login session)
   useEffect(() => {
     if (!me?.needsPasswordChange || !token) return;
     const key = `pwReminderShown:${token.slice(-12)}`;
@@ -29,15 +32,12 @@ function AdminDashboard(){
     setShowReminder(true);
   }, [me, token]);
 
-  // Hide it automatically after 8 seconds
+  // Hide the reminder automatically after 8 seconds
   useEffect(() => {
     if (!showReminder) return;
     const timer = setTimeout(() => setShowReminder(false), 8000);
     return () => clearTimeout(timer);
   }, [showReminder]);
-  const [username, setUsername] = useState("");
-  const [productCount, setProductCount] = useState(null);
-  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     // Fetch admin greeting / username
@@ -85,7 +85,7 @@ function AdminDashboard(){
         .animate-dash-4 { animation: fadeInSlide 0.4s ease-out 0.2s forwards; opacity: 0; }
       `}</style>
 
-              {showReminder && (
+      {showReminder && (
         <div
           role="alert"
           className="animate-dash-1 fixed top-5 inset-x-0 mx-auto z-50 w-[calc(100%-2rem)] max-w-md bg-brand-paper border border-brand-red rounded shadow-lg p-4 flex items-start gap-3"
@@ -158,6 +158,22 @@ function AdminDashboard(){
               <div>
                 <p className="font-semibold">Activity Log</p>
                 <p className="text-sm opacity-70 group-hover:opacity-90">Who changed what</p>
+              </div>
+            </Link>
+          )}
+
+          {/* Owner only: Website Content */}
+          {role === 'owner' && (
+            <Link
+              to="/admin/content"
+              className="group bg-brand-paper border border-brand-green rounded p-5 flex items-center gap-4 hover:bg-brand-green hover:text-brand-cream transition-colors"
+            >
+              <div className="w-11 h-11 rounded-full bg-brand-green group-hover:bg-white flex items-center justify-center shrink-0 transition-colors">
+                <FileText className="text-white group-hover:text-brand-green transition-colors" size={20}/>
+              </div>
+              <div>
+                <p className="font-semibold">Website Content</p>
+                <p className="text-sm opacity-70 group-hover:opacity-90">Edit page text</p>
               </div>
             </Link>
           )}
