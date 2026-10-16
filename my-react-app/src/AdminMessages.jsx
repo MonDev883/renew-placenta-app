@@ -98,9 +98,15 @@ function AdminMessages(){
                       {m.name} 
                       <span className="font-normal opacity-60 text-sm block sm:inline"> — {m.email}</span>
                     </p>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      {m.inquiryType || "Product question"}
-                    </span>
+                    {m.inquiryType && (
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                        m.inquiryType === "Product question"
+                          ? "bg-brand-green/10 text-brand-green"
+                          : "bg-brand-red/10 text-brand-red"
+                      }`}>
+                        {m.inquiryType}
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs opacity-60">{new Date(m.createdAt).toLocaleString()}</p>
                 </div>
@@ -108,7 +114,7 @@ function AdminMessages(){
                 {/* Action Buttons Toolbar */}
                 <div className="flex items-center gap-2 shrink-0">
                   <a
-                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(m.email)}&su=${encodeURIComponent("Re: Inquiry regarding Renew Placenta")}`}
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(m.email)}&su=${encodeURIComponent(m.inquiryType ? `Re: ${m.inquiryType} - Renew Placenta` : "Re: Inquiry regarding Renew Placenta")}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     title="Reply via Gmail"

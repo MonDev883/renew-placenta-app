@@ -8,6 +8,9 @@ const { logActivity } = require('../utils/activity');
 
 const router = express.Router();
 
+// The only inquiry types the contact form offers
+const INQUIRY_TYPES = ['Product question', 'Bulk order', 'Distributor / export'];
+
 // Limits how many messages one visitor can send (protects your inbox and Brevo quota)
 const contactLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -17,7 +20,11 @@ const contactLimiter = rateLimit({
 
 // Public: anyone can submit the contact form
 router.post('/messages', contactLimiter, async (req, res) => {
-  const { name, email, inquiryType, message } = req.body;
+  const { name, email, message } = req.body;
+  const inquiryType = INQUIRY_TYPES.includes(req.body.inquiryType)
+    ? req.body.inquiryType
+    : 'Product question';
+
   if (!name || !email || !message) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -28,12 +35,7 @@ router.post('/messages', contactLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Message is too long' });
   }
 
-  const saved = await Message.create({
-    name,
-    email,
-    inquiryType: inquiryType || 'Product question',
-    message,
-  });
+  const saved = await Message.create({ name, email, inquiryType, message });
 
   // Email alert: not awaited, so a failed email never blocks the customer
   sendNewMessageAlert(saved).catch((err) =>
@@ -51,7 +53,7 @@ router.get('/admin/messages', requireAuth, requireRole(), async (req, res) => {
 
 // Any admin role: mark a message as read
 router.put('/admin/messages/:id/read', requireAuth, requireRole(), async (req, res) => {
-  const message = await Message.findByIdAndUpdate(req.params.id, { read: true }, { new: true });
+  const message = await Message.findByIdAndUpdate(req.params.id, { read: true }, { returnDocument: 'after' });
   if (!message) return res.status(404).json({ error: 'Message not found' });
   await logActivity(req, { action: 'message.read', target: message.name, details: message.email });
   res.json(message);

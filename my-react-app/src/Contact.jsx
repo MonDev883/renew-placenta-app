@@ -94,7 +94,7 @@ function Contact(){
         </div>
       </div>
 
-      <div id="contact-form" className="max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6 mt-12" style={{ scrollMarginTop: "10rem" }}>
+      <div id="contact-form" className="max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-6 mt-12 scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28 lg:scroll-mt-32">
         <h3 className="font-semibold mb-4">Send us a message</h3>
         <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4 bg-brand-paper border border-brand-green rounded p-6">
           <input

@@ -64,14 +64,15 @@ async function sendNewMessageAlert(msg) {
   }
 
   const name = msg.name || 'Someone';
+  const type = msg.inquiryType || 'Message';
   const replyTo = /^\S+@\S+\.\S+$/.test(msg.email || '') ? msg.email : undefined;
 
   await sendEmail({
     to: recipients,
     replyTo,
-    subject: `New website message from ${name}`,
-    text: `From: ${name}\nEmail: ${msg.email || 'not provided'}\n\n${msg.message || ''}\n\nOpen the admin panel to view and reply.`,
-    html: `<p><b>From:</b> ${escapeHtml(name)}<br><b>Email:</b> ${escapeHtml(msg.email || 'not provided')}</p><p>${escapeHtml(msg.message || '').replace(/\n/g, '<br>')}</p><p><a href="https://renew-placenta.vercel.app/admin/messages">Open the admin panel to view and reply</a></p>`,
+    subject: `New website inquiry (${type}) from ${name}`,
+    text: `Type: ${type}\nFrom: ${name}\nEmail: ${msg.email || 'not provided'}\n\n${msg.message || ''}\n\nOpen the admin panel to view and reply.`,
+    html: `<p><b>Type:</b> ${escapeHtml(type)}<br><b>From:</b> ${escapeHtml(name)}<br><b>Email:</b> ${escapeHtml(msg.email || 'not provided')}</p><p>${escapeHtml(msg.message || '').replace(/\n/g, '<br>')}</p><p><a href="https://renew-placenta.vercel.app/admin/messages">Open the admin panel to view and reply</a></p>`,
   });
   console.log('New message alert sent');
 }
