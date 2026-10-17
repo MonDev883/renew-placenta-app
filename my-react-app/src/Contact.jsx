@@ -6,7 +6,7 @@ import { useState } from 'react'
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 function Contact(){
-  const [form, setForm] = useState({ name: "", email: "", inquiryType: "Product question", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", inquiryType: "", message: "" });
   const [status, setStatus] = useState("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const { contact } = useSiteContent();
@@ -25,7 +25,7 @@ function Contact(){
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Something went wrong. Please try again.");
       }
-      setForm({ name: "", email: "", inquiryType: "Product question", message: "" });
+      setForm({ name: "", email: "", inquiryType: "", message: "" });
       setStatus("sent");
     } catch (err) {
       // A TypeError means the server could not be reached at all
@@ -116,9 +116,10 @@ function Contact(){
           <select
             value={form.inquiryType}
             onChange={(e) => setForm({ ...form, inquiryType: e.target.value })}
-            className="border border-brand-green rounded px-3 py-2 text-sm bg-white md:col-span-2"
+            className={`border border-brand-green rounded px-3 py-2 text-sm bg-white md:col-span-2 ${form.inquiryType ? "" : "text-gray-500"}`}
             required
           >
+            <option value="" disabled>Select inquiry type</option>
             <option value="Product question">Product question</option>
             <option value="Bulk order">Bulk order</option>
             <option value="Distributor / export">Distributor / export</option>
