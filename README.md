@@ -1,6 +1,6 @@
 # Renew Herbal Beauty Products Since 1998
 
-Website and secure admin panel for **Renew Placenta Herbal Beauty Products**. Customers browse the product catalog and buy through the official Shopee and Lazada stores. Authorized staff manage products, customer messages, admin accounts, and page text from a private admin panel.
+Website and secure admin panel for **Renew Placenta Herbal Beauty Products Since 1998**. Customers browse the product catalog and buy through the official Shopee and Lazada stores. Authorized staff manage products, customer messages, admin accounts, and page text from a private admin panel.
 
 _Last updated: October 2026_
 
