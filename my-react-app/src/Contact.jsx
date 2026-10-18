@@ -1,4 +1,4 @@
-import { Phone, Mail, MapPin, Clock } from 'lucide-react'
+import { Phone, Mail, MapPin, Clock, Copy, Check } from 'lucide-react'
 import { FaFacebook, FaInstagram, FaYoutube, FaTwitter, FaFacebookMessenger } from 'react-icons/fa'
 import { useSiteContent } from './useSiteContent.js'
 import { useState } from 'react'
@@ -23,6 +23,14 @@ const splitEmails = (text) =>
   String(text || "").split(/[\s·,;]+/).map((s) => s.trim()).filter((s) => s.includes("@"));
 const telHref = (phone) => `tel:${phone.replace(/[^\d+]/g, "")}`;
 
+const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+// Phones use their mail app; computers open Gmail's compose window
+const emailHref = (address) =>
+  isMobile
+    ? `mailto:${address}`
+    : `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(address)}`;
+
 const linkClass = "hover:text-brand-red hover:underline underline-offset-2 break-words transition-colors";
 
 function InfoRow({ icon: Icon, label, children }){
@@ -43,12 +51,28 @@ function Contact(){
   const [form, setForm] = useState({ name: "", email: "", inquiryType: "", message: "" });
   const [status, setStatus] = useState("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [copied, setCopied] = useState("");
   const { contact } = useSiteContent();
 
   const addressLines = String(contact?.address || DEFAULT_ADDRESS).split("\n");
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressLines.join(" "))}`;
   const phones = splitPhones(contact?.phones || DEFAULT_PHONES);
   const emails = splitEmails(contact?.emails || DEFAULT_EMAILS);
+
+  async function copyEmail(address){
+    try {
+      await navigator.clipboard.writeText(address);
+    } catch {
+      const box = document.createElement("textarea");
+      box.value = address;
+      document.body.appendChild(box);
+      box.select();
+      document.execCommand("copy");
+      document.body.removeChild(box);
+    }
+    setCopied(address);
+    setTimeout(() => setCopied(""), 2000);
+  }
   
   async function handleSubmit(e){
     e.preventDefault();
@@ -99,9 +123,26 @@ function Contact(){
             </InfoRow>
 
             <InfoRow icon={Mail} label="Email">
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-1">
                 {emails.map((m) => (
-                  <a key={m} href={`mailto:${m}`} className={linkClass}>{m}</a>
+                  <div key={m} className="flex items-center gap-2">
+                    <a
+                      href={emailHref(m)}
+                      {...(isMobile ? {} : { target: "_blank", rel: "noreferrer" })}
+                      className={linkClass}
+                    >
+                      {m}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => copyEmail(m)}
+                      aria-label={`Copy ${m}`}
+                      title="Copy email address"
+                      className="shrink-0 text-brand-ink/50 hover:text-brand-green transition-colors"
+                    >
+                      {copied === m ? <Check size={14}/> : <Copy size={14}/>}
+                    </button>
+                  </div>
                 ))}
               </div>
             </InfoRow>
