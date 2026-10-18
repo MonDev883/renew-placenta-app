@@ -5,11 +5,50 @@ import { useState } from 'react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
+const SOCIALS = [
+  { label: "Facebook", href: "https://www.facebook.com/RenewPlacentaOfficial", Icon: FaFacebook, color: "text-[#1877F2]" },
+  { label: "Instagram", href: "https://www.instagram.com/renewplacenta1998/?hl=en", Icon: FaInstagram, color: "text-[#E4405F]" },
+  { label: "YouTube", href: "https://www.youtube.com/c/RenewPlacenta", Icon: FaYoutube, color: "text-[#FF0000]" },
+  { label: "X (Twitter)", href: "https://x.com/renewplacenta", Icon: FaTwitter, color: "text-[#1DA1F2]" },
+];
+
+const DEFAULT_ADDRESS = "#610 Blumentritt Ext., Brgy. 536\nSampaloc, Manila, Metro Manila, Philippines";
+const DEFAULT_PHONES = "(+63) 917 817 6736 · (+63) 922 845 8284 · (02) 8251 4850";
+const DEFAULT_EMAILS = "rene@renewplacenta.com · pureformcosmetics@yahoo.com";
+
+// "a · b, c" becomes ["a", "b", "c"]
+const splitPhones = (text) =>
+  String(text || "").split(/[·,;\n]+/).map((s) => s.trim()).filter(Boolean);
+const splitEmails = (text) =>
+  String(text || "").split(/[\s·,;]+/).map((s) => s.trim()).filter((s) => s.includes("@"));
+const telHref = (phone) => `tel:${phone.replace(/[^\d+]/g, "")}`;
+
+const linkClass = "hover:text-brand-red hover:underline underline-offset-2 break-words transition-colors";
+
+function InfoRow({ icon: Icon, label, children }){
+  return (
+    <div className="flex items-start gap-3.5">
+      <div className="w-9 h-9 rounded-xl bg-brand-red/10 flex items-center justify-center shrink-0 text-brand-red">
+        <Icon size={18} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-ink/60">{label}</p>
+        <div className="text-brand-ink/90 leading-relaxed mt-0.5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 function Contact(){
   const [form, setForm] = useState({ name: "", email: "", inquiryType: "", message: "" });
   const [status, setStatus] = useState("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const { contact } = useSiteContent();
+
+  const addressLines = String(contact?.address || DEFAULT_ADDRESS).split("\n");
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressLines.join(" "))}`;
+  const phones = splitPhones(contact?.phones || DEFAULT_PHONES);
+  const emails = splitEmails(contact?.emails || DEFAULT_EMAILS);
   
   async function handleSubmit(e){
     e.preventDefault();
@@ -43,43 +82,44 @@ function Contact(){
         <div>
           <h3 className="font-display font-semibold text-lg mb-4 text-brand-ink">Contact Us</h3>
           <div className="space-y-4 text-sm">
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-brand-red/10 flex items-center justify-center shrink-0 text-brand-red mt-0.5">
-                <MapPin size={18} />
-              </div>
-              <span className="text-brand-ink/90 leading-relaxed pt-1">
-                {contact?.address ? contact.address.split('\n').map((line, i) => (
+            <InfoRow icon={MapPin} label="Address">
+              <a href={mapsUrl} target="_blank" rel="noreferrer" className={linkClass}>
+                {addressLines.map((line, i) => (
                   <span key={i}>{i > 0 && <br/>}{line}</span>
-                )) : (
-                  <>#610 Blumentritt Ext., Brgy. 536<br/>Sampaloc, Manila, Metro Manila, Philippines</>
-                )}
-              </span>
-            </div>
+                ))}
+              </a>
+            </InfoRow>
 
-            <div className="flex items-center gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-brand-red/10 flex items-center justify-center shrink-0 text-brand-red">
-                <Phone size={18} />
+            <InfoRow icon={Phone} label="Phone">
+              <div className="flex flex-col gap-0.5">
+                {phones.map((p) => (
+                  <a key={p} href={telHref(p)} className={linkClass}>{p}</a>
+                ))}
               </div>
-              <span className="min-w-0 break-words text-brand-ink/90">
-                {contact?.phones || "(+63) 917 817 6736 · (+63) 922 845 8284 · (02) 8251 4850"}
-              </span>
-            </div>
+            </InfoRow>
 
-            <div className="flex items-center gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-brand-red/10 flex items-center justify-center shrink-0 text-brand-red">
-                <Mail size={18} />
+            <InfoRow icon={Mail} label="Email">
+              <div className="flex flex-col gap-0.5">
+                {emails.map((m) => (
+                  <a key={m} href={`mailto:${m}`} className={linkClass}>{m}</a>
+                ))}
               </div>
-              <span className="min-w-0 break-words text-brand-ink/90">
-                {contact?.emails || "rene@renewplacenta.com · pureformcosmetics@yahoo.com"}
-              </span>
-            </div>
+            </InfoRow>
           </div>
 
-          <div className="flex items-center gap-4 mt-6">
-            <a href="https://www.facebook.com/RenewPlacentaOfficial" target="_blank" rel="noreferrer" aria-label="Facebook" className="text-[#1877F2] hover:text-brand-red transition-colors"><FaFacebook size={20}/></a>
-            <a href="https://www.instagram.com/renewplacenta1998/?hl=en" target="_blank" rel="noreferrer" aria-label="Instagram" className="text-[#E4405F] hover:text-brand-red transition-colors"><FaInstagram size={20}/></a>
-            <a href="https://www.youtube.com/c/RenewPlacenta" target="_blank" rel="noreferrer" aria-label="YouTube" className="text-[#FF0000] hover:text-brand-red transition-colors"><FaYoutube size={20}/></a>
-            <a href="https://x.com/renewplacenta" target="_blank" rel="noreferrer" aria-label="X (Twitter)" className="text-[#1DA1F2] hover:text-brand-red transition-colors"><FaTwitter size={20}/></a>
+          <div className="flex items-center gap-3 mt-6">
+            {SOCIALS.map(({ label, href, Icon, color }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={label}
+                className={`w-9 h-9 rounded-xl bg-brand-paper border border-brand-green/30 flex items-center justify-center ${color} transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-brand-red`}
+              >
+                <Icon size={18}/>
+              </a>
+            ))}
           </div>
 
           <div className="mt-5">
