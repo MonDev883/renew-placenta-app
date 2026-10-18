@@ -20,8 +20,8 @@ app.set('trust proxy', 1);
 // Only these websites may call the API from a browser.
 // Extra origins can be added in Render with ALLOWED_ORIGINS (comma-separated).
 const allowedOrigins = [
-  'https://renew-placenta.netlify.app',
-  'https://renew-placenta.vercel.app',
+  'https://renew-placenta.netlify.app',//The first deployment for my project
+  'https://renew-placenta.vercel.app',//The second deployment for my prject
   'http://localhost:5173',
   ...(process.env.ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean),
 ];
@@ -44,9 +44,13 @@ app.get('/api/admin/ping', requireAuth, (req, res) => {
   res.json({ message: `Hello, ${req.admin.username}. You are logged in.` });
 });
 
-// HEALTH CHECK ENDPOINT
+// HEALTH CHECK ENDPOINT (used by uptime monitors)
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date() });
+  const dbUp = mongoose.connection.readyState === 1;
+  res.status(dbUp ? 200 : 503).json({
+    status: dbUp ? 'ok' : 'database unavailable',
+    timestamp: new Date(),
+  });
 });
 
 // Central error handler (must stay after all routes)
@@ -70,4 +74,7 @@ mongoose.connect(process.env.MONGODB_URI)
       console.log(`Server running on port ${PORT}`);
     });
   })
-  .catch((err) => console.error('MongoDB connection error:', err));
+   .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
