@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { ChevronDown, ChevronUp, Search, X } from 'lucide-react'
 import ProductCard from './ProductCard.jsx'
 import ProductGalleryModal from './ProductGalleryModal.jsx'
-import logoImg from '/favicon.png'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -20,16 +19,17 @@ function Products(){
   const [showAll, setShowAll] = useState(false);
   const [viewProduct, setViewProduct] = useState(null);
   const [previewCount, setPreviewCount] = useState(getPreviewCount);
-
   const [loadingMessage, setLoadingMessage] = useState("Loading Renew Placenta...");
 
+  // Each time loading starts, show a friendlier message if it takes longer than 3 seconds
   useEffect(() => {
+    if (status !== "loading") return;
+    setLoadingMessage("Loading Renew Placenta...");
     const timer = setTimeout(() => {
       setLoadingMessage("Waking up server, please wait a moment...");
     }, 3000);
-
     return () => clearTimeout(timer);
-  }, []);
+  }, [status]);
 
   useEffect(() => {
     function update(){ setPreviewCount(getPreviewCount()); }
@@ -134,20 +134,25 @@ function Products(){
             {filtered.length} {filtered.length === 1 ? "result" : "results"} for "{search.trim()}"
           </p>
         )}
-      {status === "loading" && (
-          <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+
+        {status === "loading" && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex flex-col items-center justify-center py-20 px-4 text-center"
+          >
             <div className="relative flex items-center justify-center mb-5">
-              <div className="absolute h-20 w-20 rounded-full border-4 border-emerald-600/20 border-t-emerald-600 animate-spin"></div>
+              <div className="absolute h-20 w-20 rounded-full border-4 border-brand-green/20 border-t-brand-green animate-spin motion-reduce:animate-none"></div>
               <img
-                src={logoImg}
-                alt="Renew Placenta Logo"
-                className="h-10 w-10 object-contain animate-pulse relative z-10"
+                src="/favicon.png"
+                alt=""
+                className="h-10 w-10 object-contain animate-pulse motion-reduce:animate-none relative z-10"
               />
             </div>
-            <h3 className="font-['Playfair_Display',serif] text-lg font-semibold text-emerald-900 mb-1">
+            <h3 className="font-['Playfair_Display',serif] text-lg font-semibold text-brand-green-deep mb-1">
               Renew Placenta
             </h3>
-            <p className="text-xs sm:text-sm text-emerald-700/80 max-w-sm animate-pulse">
+            <p className="text-xs sm:text-sm text-brand-ink/70 max-w-sm">
               {loadingMessage}
             </p>
           </div>
