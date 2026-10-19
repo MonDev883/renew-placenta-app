@@ -58,11 +58,11 @@ function ProductCard({ product, onView }){
           onError={(e) => { e.currentTarget.style.display = "none"; }}
         />
       )}
-      <div className="p-5">
+      <div className="p-5 flex flex-col flex-1">
         <Icon className="text-brand-green mb-2" size={22} strokeWidth={1.75}/>
-        <h3 className="text-lg font-semibold pr-10 mb-1.5">{product.name}</h3>
+        <h3 className="text-lg font-semibold mb-1.5">{product.name}</h3>
         <div className="text-xs text-brand-red font-semibold mb-2.5">{product.size}</div>
-        <p className="text-sm opacity-85 mb-3.5 text-justify">{product.blurb}</p>
+        <p className="text-sm opacity-85 mb-3.5 text-left">{product.blurb}</p>
         {price && <div className="font-display text-xl font-semibold">₱{price}</div>}
         
         {soldOut ? (
