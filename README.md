@@ -252,6 +252,21 @@ Notes:
 
 ---
 
+## Editing Content: Where Things Live
+
+| What you want to change | Where |
+| --- | --- |
+| Products (names, prices, sizes, descriptions, photos, shop links, hide, out of stock) | Admin panel, **Manage Products** |
+| Home banner, About, contact details, business hours, service cards, testimonials, footer notes | Admin panel, **Website Content** (Owners only) |
+| Social media links and the Messenger address | `my-react-app/src/Contact.jsx` |
+| Section headings, hero buttons, header menu | The matching file in `my-react-app/src/` |
+| Page title, description, share preview | `my-react-app/index.html` |
+| Privacy Policy and Terms of Service | Not written yet (plain text in the footer) |
+
+The built-in fallback text is in `my-react-app/src/siteDefaults.js`. Text saved from the admin overrides it, so change wording in **Website Content**, not in this file.
+
+---
+
 ## Troubleshooting
 
 | Problem | What to check |
@@ -264,6 +279,18 @@ Notes:
 | A new route returns 404 locally | An old backend process is still running. Stop it and start the server again |
 | Products load but images are broken | Images stored with old `localhost` links must be uploaded again in Manage Products |
 | An admin is locked out | Another Owner can delete and recreate the account, or use Forgot Password |
+
+---
+
+## If the Website Address Changes
+
+Replace the old address in these places, then redeploy:
+
+1. `my-react-app/index.html` (canonical, og:url, og:image, twitter:image, and the business data)
+2. `my-react-app/public/robots.txt` and `public/sitemap.xml`
+3. `renew-admin-server/server.js` (the `allowedOrigins` list), or `ALLOWED_ORIGINS` on Render
+4. `renew-admin-server/utils/mailer.js` (the admin link inside the message alert email)
+5. The uptime monitor addresses and the Facebook Sharing Debugger
 
 ---
 
