@@ -4,6 +4,45 @@ Website and secure admin panel for **Renew Placenta Herbal Beauty Products Since
 
 _Last updated: October 2026_
 
+## Screenshots
+
+_Customer names, emails, and messages in these images are sample data._
+
+### Public website
+
+| Home page | Product catalog |
+| --- | --- |
+| ![Home page with the banner and the product slideshow](docs/screenshots/home.png) | ![Product grid with search box and category buttons](docs/screenshots/catalog.png) |
+| The banner and the slideshow of featured products. | Customers search by name and filter by category. Each card links to the official Shopee and Lazada listings. |
+
+| Contact section | On a phone |
+| --- | --- |
+| ![Contact details, business hours, and the inquiry form](docs/screenshots/contact.png) | <img src="docs/screenshots/mobile-home.png" alt="The home page on a phone" width="240"> |
+| Tap-to-call, email, and map links, plus the inquiry form with a type selector. | The whole site adapts to phone screens. |
+
+### Admin panel
+
+| Dashboard | Manage Products |
+| --- | --- |
+| ![Admin dashboard for an Owner](docs/screenshots/admin-dashboard.png) | ![Product list with hide and out-of-stock buttons](docs/screenshots/admin-products.png) |
+| The cards shown depend on the person's role. | Add, edit, reorder, hide, or mark products out of stock. |
+
+| Messages | Website Content |
+| --- | --- |
+| ![Inbox of customer messages with inquiry type labels](docs/screenshots/admin-messages.png) | ![Page where owners edit the website text](docs/screenshots/admin-content.png) |
+| Bulk orders and distributor inquiries are highlighted. Replies open in Gmail. | Owners edit the home banner, About, contact details, hours, services, testimonials, and footer notes. |
+
+| Admin Accounts | Activity Log |
+| --- | --- |
+| ![List of admin accounts with roles](docs/screenshots/admin-users.png) | ![Activity log of who changed what](docs/screenshots/admin-activity.png) |
+| Owners create accounts and set Owner, Editor, or Support roles. | Owners see who changed or deleted what, and when. |
+
+### How a customer message flows
+
+1. A customer fills in the inquiry form on the website.
+2. The message is saved and appears in the admin **Messages** inbox, and the team gets an email alert.
+3. An admin opens the message and replies from their own Gmail with the **Reply** button.
+
 ---
 
 ## Table of Contents
