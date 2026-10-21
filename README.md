@@ -4,6 +4,25 @@ Website and secure admin panel for **Renew Placenta Herbal Beauty Products Since
 
 _Last updated: October 2026_
 
+## Table of Contents
+
+- [Screenshots](#screenshots)
+- [Live Links](#live-links)
+- [Features](#features)
+- [Admin Roles](#admin-roles)
+- [Tech Stack](#tech-stack)
+- [Where Everything Runs](#where-everything-runs)
+- [Project Structure](#project-structure)
+- [Getting Started (Local Development)](#getting-started-local-development)
+- [Environment Variables](#environment-variables)
+- [Deploying Changes](#deploying-changes)
+- [Maintenance Commands](#maintenance-commands)
+- [Editing Content: Where Things Live](#editing-content-where-things-live)
+- [Troubleshooting](#troubleshooting)
+- [If the Website Address Changes](#if-the-website-address-changes)
+- [Security Notes](#security-notes)
+- [Support & Handover](#support--handover)
+
 ## Screenshots
 
 _Customer names, emails, and messages in these images are sample data._
@@ -42,24 +61,6 @@ _Customer names, emails, and messages in these images are sample data._
 1. A customer fills in the inquiry form on the website.
 2. The message is saved and appears in the admin **Messages** inbox, and the team gets an email alert.
 3. An admin opens the message and replies from their own Gmail with the **Reply** button.
-
----
-
-## Table of Contents
-
-- [Live Links](#live-links)
-- [Features](#features)
-- [Admin Roles](#admin-roles)
-- [Tech Stack](#tech-stack)
-- [Where Everything Runs](#where-everything-runs)
-- [Project Structure](#project-structure)
-- [Getting Started (Local Development)](#getting-started-local-development)
-- [Environment Variables](#environment-variables)
-- [Deploying Changes](#deploying-changes)
-- [Maintenance Commands](#maintenance-commands)
-- [Troubleshooting](#troubleshooting)
-- [Security Notes](#security-notes)
-- [Support & Handover](#support--handover)
 
 ---
 
@@ -166,6 +167,7 @@ Fill in the last column during the handover. If an account is closed or unpaid, 
 │   ├── middleware/            # requireAuth, requireRole, upload (Cloudinary)
 │   ├── utils/                 # mailer (Brevo), activity log, password policy
 │   ├── scripts/               # backup, restore, clear-activity
+├── docs/screenshots/          # README images
 │   └── server.js
 └── my-react-app/              # React frontend (public site + admin panel)
     ├── public/                # favicon, share image, robots.txt, sitemap.xml
@@ -257,8 +259,8 @@ Commit `.env.example` files with the names above and fake values, but **never** 
 
 Pushing to the `main` branch on GitHub deploys both parts automatically:
 
-- **Render** rebuilds the backend (root directory `renew-admin-server`, start command `npm start`).
-- **Vercel** rebuilds the frontend (root directory `my-react-app`).
+- **Render** rebuilds the backend (root directory `renew-admin-server`, start command `node server.js`).
+- **Vercel** rebuilds the frontend (root directory `my-react-app`, build command `npm run build`).
 
 Before pushing:
 
